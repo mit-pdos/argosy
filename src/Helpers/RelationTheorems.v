@@ -4,10 +4,13 @@ Require Import Helpers.RelationRewriting.
 Import RelationNotations.
 
 Theorem seq_star_invariant A (r: relation A A unit) P :
-  test P;; r ---> test P;; r;; test P ->
+  test P;; r ---> r;; test P ->
   test P;; seq_star r ---> test P;; seq_star r;; test P.
 Proof.
-  intros.
+  intros Htest.
+  assert (test P;; r ---> test P;; r;; test P) as H.
+  rewrite <- test_idem at 1; norm.
+  rew Htest.
   rewrite <- bind_assoc in H.
   apply simulation_seq in H.
   rewrite H.

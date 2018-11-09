@@ -83,17 +83,24 @@ Section Layers.
             (c_sem.(crash_step);; c_exec_recover impl.(recover))
             (a_sem.(crash_step)).
 
+  Definition init_establishes_absr (impl: LayerImpl C_Op Op) (absr: relation AState CState unit) :=
+    test c_initP;; c_exec impl.(init) --->
+      (any (T:=unit);; test a_initP;; absr;; pure Initialized)
+      (* failing initialization can do anything since a lower layer
+                might have initialized before this failure *)
+    + (any (T:=unit);; pure InitFailed) /\
+    (* idempotency for initialization *)
+    test c_initP;; c_sem.(exec_crash) impl.(init);; c_sem.(crash_step) --->
+       c_sem.(exec_crash) impl.(init);; c_sem.(crash_step);; test c_initP
+  .
+
   Record LayerRefinement :=
     { impl: LayerImpl C_Op Op;
       absr: relation AState CState unit;
       compile_op_ok : compile_op_refines_step impl absr;
       recovery_noop_ok : recovery_refines_crash_step impl absr;
       (* TODO: prove implementations are well-formed *)
-      init_ok : test c_initP;; c_exec impl.(init) --->
-                                                  (any (T:=unit);; test a_initP;; absr;; pure Initialized)
-                (* failing initialization can do anything since a lower layer
-                might have initialized before this failure *)
-                + (any (T:=unit);; pure InitFailed)}.
+      init_ok : init_establishes_absr impl absr }.
 
   Context (rf: LayerRefinement).
   Notation compile_op := rf.(impl).(compile_op).
@@ -243,13 +250,42 @@ Section Layers.
     then v <- r; pure (Some v)
     else pure None.
 
+  Definition initialize := c_exec rf.(impl).(init) + (c_sem.(rexec) rf.(impl).(init) rf.(impl).(init)).
+
+  Theorem initialize_ok :
+    test c_initP;; initialize --->
+      (any (T:=unit);; test a_initP;; rf.(absr);; pure Initialized)
+    + (any (T:=unit);; pure InitFailed).
+  Proof.
+    pose unfolded rf.(init_ok)
+                       (fun H => red in H).
+    unfold initialize.
+    Split.
+    - rew H.
+    - rew @rexec_to_exec_recover.
+      rewrite exec_recover_unfold.
+      setoid_rewrite <- bind_assoc in H0 at 2.
+      apply RelationTheorems.seq_star_invariant in H0.
+      left_assoc rew H0.
+      rew H.
+      Split; [ Left | Right ].
+      + setoid_rewrite <- bind_assoc at 1.
+        setoid_rewrite <- bind_assoc at 1.
+        rel_congruence.
+        apply to_any.
+      + setoid_rewrite <- bind_assoc at 1.
+        setoid_rewrite <- bind_assoc at 1.
+        rel_congruence.
+        apply to_any.
+  Qed.
+
   Theorem complete_exec_ok : forall T (p: a_proc T),
-      test c_initP;; inited <- c_exec rf.(impl).(init); ifInit inited (c_exec (compile p)) --->
+      test c_initP;; inited <- initialize; ifInit inited (c_exec (compile p)) --->
            (any (T:=unit);; test a_initP;; v <- a_sem.(exec) p; any (T:=unit);; pure (Some v)) +
       (any (T:=unit);; pure None).
   Proof.
     intros.
-    left_assoc rew rf.(init_ok).
+    left_assoc rew initialize_ok.
     repeat rew bind_dist_r.
     simpl.
     Split.
@@ -263,12 +299,12 @@ Section Layers.
   Qed.
 
   Theorem complete_rexec_ok : forall T (p: a_proc T) R (rec: a_proc R),
-      test c_initP;; inited <- c_exec rf.(impl).(init); ifInit inited (c_sem.(rexec) (compile p) (compile_rec rec)) --->
+      test c_initP;; inited <- initialize; ifInit inited (c_sem.(rexec) (compile p) (compile_rec rec)) --->
            (any (T:=unit);; test a_initP;; v <- a_sem.(rexec) p rec; any (T:=unit);; pure (Some v)) +
       (any (T:=unit);; pure None).
   Proof.
     intros.
-    left_assoc rew rf.(init_ok).
+    left_assoc rew initialize_ok.
     repeat rew bind_dist_r.
     simpl.
     Split.
@@ -282,12 +318,12 @@ Section Layers.
   Qed.
 
   Theorem complete_exec_seq_ok : forall R (p: a_proc_seq R) (rec: a_proc R),
-      test c_initP;; inited <- c_exec rf.(impl).(init); ifInit inited (c_sem.(exec_seq) (compile_seq p) (compile_rec rec)) --->
+      test c_initP;; inited <- initialize; ifInit inited (c_sem.(exec_seq) (compile_seq p) (compile_rec rec)) --->
            (any (T:=unit);; test a_initP;; v <- a_sem.(exec_seq) p rec; any (T:=unit);; pure (Some v)) +
       (any (T:=unit);; pure None).
   Proof.
     intros.
-    left_assoc rew rf.(init_ok).
+    left_assoc rew initialize_ok.
     repeat rew bind_dist_r.
     simpl.
     Split.
@@ -304,7 +340,7 @@ Section Layers.
   Theorem complete_exec_seq_ok_alt R (p: a_proc_seq R) (rec: a_proc R)
       (cs1 cs2: CState) mv:
     c_initP cs1 ->
-    (inited <- c_exec rf.(impl).(init);
+    (inited <- initialize;
      match inited with
      | InitFailed => pure None
      | Initialized =>
@@ -330,7 +366,7 @@ Section Layers.
   Qed.
 
   Theorem complete_exec_seq_ok_alt2 R (p: a_proc_seq R) (rec: a_proc R) v:
-    c_output (inited <- c_exec rf.(impl).(init);
+    c_output (inited <- initialize;
                 match inited with
                 | InitFailed => pure None
                 | Initialized =>
@@ -404,21 +440,23 @@ Proof.
     rew H.
     rew rf1.(rexec_star_rec).
     left_assoc rew rf2.(crash_step_refinement).
-  - unfold layer_impl_compose; simpl.
-    rewrite <- bind_assoc.
-    rew rf1.(init_ok).
-    Split.
-    + rew rf1.(compile_exec_ok).
-      setoid_rewrite <- bind_assoc at 2.
-      rew rf2.(init_ok).
-      repeat (setoid_rewrite bind_dist_r ||
-              setoid_rewrite bind_dist_l); norm.
-      left_assoc rew any_idem.
+  - unfold init_establishes_absr; split.
+    + unfold layer_impl_compose; simpl.
+    +
+      rewrite <- bind_assoc.
+      rew initialize_ok.
       Split.
-      * Left.
+      * rew rf1.(compile_exec_ok).
+        setoid_rewrite <- bind_assoc at 2.
+        rew rf2.(init_ok).
+        repeat (setoid_rewrite bind_dist_r ||
+                setoid_rewrite bind_dist_l); norm.
+        left_assoc rew any_idem.
+        Split.
+        -- Left.
+        -- Right.
+           rewrite <- bind_assoc.
+           rel_congruence.
+           apply to_any.
       * Right.
-        rewrite <- bind_assoc.
-        rel_congruence.
-        apply to_any.
-    + Right.
 Qed.

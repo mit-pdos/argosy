@@ -83,24 +83,21 @@ Section Layers.
             (c_sem.(crash_step);; c_exec_recover impl.(recover))
             (a_sem.(crash_step)).
 
-  Definition init_establishes_absr (impl: LayerImpl C_Op Op) (absr: relation AState CState unit) :=
-    test c_initP;; c_exec impl.(init) --->
+  Definition initialize (impl: LayerImpl C_Op Op) := c_exec impl.(init) + (c_sem.(rexec) impl.(init) impl.(init)).
+
+  Definition initialize_establishes_absr (impl: LayerImpl C_Op Op) (absr: relation AState CState unit) :=
+    test c_initP;; initialize impl --->
       (any (T:=unit);; test a_initP;; absr;; pure Initialized)
       (* failing initialization can do anything since a lower layer
                 might have initialized before this failure *)
-    + (any (T:=unit);; pure InitFailed) /\
-    (* idempotency for initialization *)
-    test c_initP;; c_sem.(exec_crash) impl.(init);; c_sem.(crash_step) --->
-       c_sem.(exec_crash) impl.(init);; c_sem.(crash_step);; test c_initP
-  .
+    + (any (T:=unit);; pure InitFailed).
 
   Record LayerRefinement :=
     { impl: LayerImpl C_Op Op;
       absr: relation AState CState unit;
       compile_op_ok : compile_op_refines_step impl absr;
       recovery_noop_ok : recovery_refines_crash_step impl absr;
-      (* TODO: prove implementations are well-formed *)
-      init_ok : init_establishes_absr impl absr }.
+      init_ok : initialize_establishes_absr impl absr }.
 
   Context (rf: LayerRefinement).
   Notation compile_op := rf.(impl).(compile_op).
@@ -250,15 +247,21 @@ Section Layers.
     then v <- r; pure (Some v)
     else pure None.
 
-  Definition initialize := c_exec rf.(impl).(init) + (c_sem.(rexec) rf.(impl).(init) rf.(impl).(init)).
+  Definition init_idempotent_absr (impl: LayerImpl C_Op Op) (absr: relation AState CState unit) :=
+    test c_initP;; c_exec impl.(init) --->
+                                      (any (T:=unit);; test a_initP;; absr;; pure Initialized)
+    (* failing initialization can do anything since a lower layer
+                might have initialized before this failure *)
+    + (any (T:=unit);; pure InitFailed) /\
+    (* idempotency for initialization *)
+    test c_initP;; c_sem.(exec_crash) impl.(init);; c_sem.(crash_step) --->
+                                                                       c_sem.(exec_crash) impl.(init);; c_sem.(crash_step);; test c_initP.
 
-  Theorem initialize_ok :
-    test c_initP;; initialize --->
-      (any (T:=unit);; test a_initP;; rf.(absr);; pure Initialized)
-    + (any (T:=unit);; pure InitFailed).
+  Theorem initialize_idempotent_ok impl absr :
+    init_idempotent_absr impl absr ->
+    initialize_establishes_absr impl absr.
   Proof.
-    pose unfolded rf.(init_ok)
-                       (fun H => red in H).
+    unfold init_idempotent_absr, initialize_establishes_absr; propositional.
     unfold initialize.
     Split.
     - rew H.
@@ -279,13 +282,15 @@ Section Layers.
         apply to_any.
   Qed.
 
+  Hint Unfold initialize_establishes_absr : relation_rewriting.
+
   Theorem complete_exec_ok : forall T (p: a_proc T),
-      test c_initP;; inited <- initialize; ifInit inited (c_exec (compile p)) --->
+      test c_initP;; inited <- initialize rf.(impl); ifInit inited (c_exec (compile p)) --->
            (any (T:=unit);; test a_initP;; v <- a_sem.(exec) p; any (T:=unit);; pure (Some v)) +
       (any (T:=unit);; pure None).
   Proof.
     intros.
-    left_assoc rew initialize_ok.
+    left_assoc rew init_ok.
     repeat rew bind_dist_r.
     simpl.
     Split.
@@ -299,12 +304,13 @@ Section Layers.
   Qed.
 
   Theorem complete_rexec_ok : forall T (p: a_proc T) R (rec: a_proc R),
-      test c_initP;; inited <- initialize; ifInit inited (c_sem.(rexec) (compile p) (compile_rec rec)) --->
-           (any (T:=unit);; test a_initP;; v <- a_sem.(rexec) p rec; any (T:=unit);; pure (Some v)) +
-      (any (T:=unit);; pure None).
+      test c_initP;; inited <- initialize rf.(impl);
+        ifInit inited (c_sem.(rexec) (compile p) (compile_rec rec)) --->
+               (any (T:=unit);; test a_initP;; v <- a_sem.(rexec) p rec; any (T:=unit);; pure (Some v)) +
+        (any (T:=unit);; pure None).
   Proof.
     intros.
-    left_assoc rew initialize_ok.
+    left_assoc rew init_ok.
     repeat rew bind_dist_r.
     simpl.
     Split.
@@ -318,12 +324,13 @@ Section Layers.
   Qed.
 
   Theorem complete_exec_seq_ok : forall R (p: a_proc_seq R) (rec: a_proc R),
-      test c_initP;; inited <- initialize; ifInit inited (c_sem.(exec_seq) (compile_seq p) (compile_rec rec)) --->
-           (any (T:=unit);; test a_initP;; v <- a_sem.(exec_seq) p rec; any (T:=unit);; pure (Some v)) +
-      (any (T:=unit);; pure None).
+      test c_initP;; inited <- initialize rf.(impl);
+        ifInit inited (c_sem.(exec_seq) (compile_seq p) (compile_rec rec)) --->
+               (any (T:=unit);; test a_initP;; v <- a_sem.(exec_seq) p rec; any (T:=unit);; pure (Some v)) +
+        (any (T:=unit);; pure None).
   Proof.
     intros.
-    left_assoc rew initialize_ok.
+    left_assoc rew init_ok.
     repeat rew bind_dist_r.
     simpl.
     Split.
@@ -340,7 +347,7 @@ Section Layers.
   Theorem complete_exec_seq_ok_alt R (p: a_proc_seq R) (rec: a_proc R)
       (cs1 cs2: CState) mv:
     c_initP cs1 ->
-    (inited <- initialize;
+    (inited <- initialize rf.(impl);
      match inited with
      | InitFailed => pure None
      | Initialized =>
@@ -366,7 +373,7 @@ Section Layers.
   Qed.
 
   Theorem complete_exec_seq_ok_alt2 R (p: a_proc_seq R) (rec: a_proc R) v:
-    c_output (inited <- initialize;
+    c_output (inited <- initialize rf.(impl);
                 match inited with
                 | InitFailed => pure None
                 | Initialized =>
@@ -402,6 +409,31 @@ Proof.
          |}.
 Defined.
 
+Theorem initialize_simplify
+           Op1 (l1: Layer Op1) Op2
+           (impl: LayerImpl Op1 Op2) :
+  initialize l1 impl <--->
+                           exec_recover l1 impl.(init).
+Proof.
+  unfold initialize, rexec, exec_recover.
+  setoid_rewrite star_expand at 2; norm.
+  rew bind_dist_r.
+Qed.
+
+Hint Unfold initialize_establishes_absr : relation_rewriting.
+
+Lemma rexec_init_check_status:
+  forall (Op1 : Type -> Type) (l1 : Layer Op1) (Op2 : Type -> Type) (l2 : Layer Op2) (Op3 : Type -> Type)
+    (l3 : Layer Op3) (rf1 : LayerRefinement l1 l2) (rf2 : LayerRefinement l2 l3) (v : InitStatus),
+    rexec l1 (if v then compile rf1 rf2.(init) else Ret InitFailed) rf1.(init) <--->
+    (if v then rexec l1 (compile rf1 rf2.(init)) rf1.(init)
+     else _ <- l1.(crash_step); exec_recover l1 rf1.(init)).
+Proof.
+  intros Op1 l1 Op2 l2 Op3 l3 rf1 rf2 v.
+  unfold rexec.
+  destruct v; simpl; norm.
+Qed.
+
 Definition layer_compose
            Op1 (l1: Layer Op1)
            Op2 (l2: Layer Op2)
@@ -418,7 +450,7 @@ Definition layer_compose
 Proof.
   refine {| impl := layer_impl_compose rf1.(impl) rf2.(impl);
             absr := rf2.(absr);; rf1.(absr) |}.
-    simpl; intros.
+  simpl; intros.
   - (* op crash refinement *)
     red; unfold layer_impl_compose; simpl.
     split; simpl; unfold refines; norm.
@@ -440,23 +472,19 @@ Proof.
     rew H.
     rew rf1.(rexec_star_rec).
     left_assoc rew rf2.(crash_step_refinement).
-  - unfold init_establishes_absr; split.
-    + unfold layer_impl_compose; simpl.
-    +
-      rewrite <- bind_assoc.
-      rew initialize_ok.
-      Split.
-      * rew rf1.(compile_exec_ok).
-        setoid_rewrite <- bind_assoc at 2.
-        rew rf2.(init_ok).
-        repeat (setoid_rewrite bind_dist_r ||
-                setoid_rewrite bind_dist_l); norm.
-        left_assoc rew any_idem.
-        Split.
-        -- Left.
-        -- Right.
-           rewrite <- bind_assoc.
-           rel_congruence.
-           apply to_any.
-      * Right.
-Qed.
+  - unfold initialize_establishes_absr.
+    rew initialize_simplify.
+    simpl.
+    rew @exec_recover_bind.
+    rew<- initialize_simplify.
+    rewrite <- bind_assoc.
+    rew rf1.(init_ok).
+    Split.
+    + rew rexec_init_check_status.
+    (* need some bind_star induction *)
+      admit.
+    + Right.
+      (* similar bind_star induction (but much simpler because it just reduces
+      to pure InitFailed) *)
+      admit.
+Admitted.

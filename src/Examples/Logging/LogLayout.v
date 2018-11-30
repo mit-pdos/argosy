@@ -219,7 +219,7 @@ Proof.
     auto.
 Qed.
 
-Local Hint Resolve read_ok write_ok size_ok.
+Local Hint Resolve read_ok write_ok size_ok : core.
 
 Ltac step :=
   step_proc; simplify; finish.
@@ -246,7 +246,7 @@ Proof.
   rewrite LogHdr_fmt.(encode_decode); auto.
 Qed.
 
-Local Hint Resolve gethdr_ok.
+Local Hint Resolve gethdr_ok : core.
 
 Lemma phy_writedesc:
   forall (ps : PhysicalState) (desc : Descriptor) (s : D.State),
@@ -263,7 +263,7 @@ Proof.
   inv_clear H; constructor; intros; array.
 Qed.
 
-Local Hint Resolve phy_writedesc.
+Local Hint Resolve phy_writedesc : core.
 
 
 Lemma phy_writehdr:
@@ -280,7 +280,7 @@ Proof.
   inv_clear H; constructor; intros; array.
 Qed.
 
-Local Hint Resolve phy_writehdr.
+Local Hint Resolve phy_writehdr : core.
 
 Ltac spec_impl :=
   eapply proc_hspec_impl; [ unfold spec_impl | solve [ eauto] ];
@@ -308,7 +308,7 @@ Proof.
   spec_impl; split_wlog.
 Qed.
 
-Local Hint Resolve writehdr_ok.
+Local Hint Resolve writehdr_ok : core.
 
 Theorem writedesc_ok ps desc :
   proc_hspec
@@ -333,13 +333,13 @@ Proof.
   spec_impl; split_wlog.
 Qed.
 
-Local Hint Resolve writedesc_ok.
+Local Hint Resolve writedesc_ok : core.
 
 Definition log_assign (log_values:LogValues) i b : LogValues :=
   {| values := assign log_values i b;
      values_ok := ltac:(autorewrite with length; auto); |}.
 
-Local Hint Resolve addresses_length.
+Local Hint Resolve addresses_length : core.
 
 Definition desc_assign (desc:Descriptor) i a : Descriptor :=
   {| addresses := assign desc i a;
@@ -370,7 +370,7 @@ Proof.
   destruct (i == i0); subst; array.
 Qed.
 
-Local Hint Resolve phy_set_log_value.
+Local Hint Resolve phy_set_log_value : core.
 
 Theorem getdesc_ok ps :
   proc_hspec
@@ -391,7 +391,7 @@ Proof.
   rewrite Descriptor_fmt.(encode_decode); auto.
 Qed.
 
-Local Hint Resolve getdesc_ok.
+Local Hint Resolve getdesc_ok : core.
 
 Theorem set_desc_ok ps desc i a v :
   proc_hspec
@@ -420,7 +420,7 @@ Proof.
   spec_impl; split_wlog; simplify; finish.
 Qed.
 
-Local Hint Resolve set_desc_ok.
+Local Hint Resolve set_desc_ok : core.
 
 Theorem phy_log_size_ok ps :
   proc_hspec
@@ -440,7 +440,7 @@ Proof.
   omega.
 Qed.
 
-Local Hint Resolve phy_log_size_ok.
+Local Hint Resolve phy_log_size_ok : core.
 
 Lemma sel_log_value d ps i :
   PhyDecode d ps ->
@@ -477,7 +477,7 @@ Proof.
   auto using sel_log_value.
 Qed.
 
-Local Hint Resolve get_logwrite_ok.
+Local Hint Resolve get_logwrite_ok : core.
 
 Lemma phy_index_data:
   forall (ps : PhysicalState) (a : nat) (s : D.ODLayer.(State)),
@@ -500,7 +500,7 @@ Proof.
   apply sel_index_eq; auto.
 Qed.
 
-Local Hint Resolve phy_index_data.
+Local Hint Resolve phy_index_data : core.
 
 Theorem data_read_ok ps a :
   proc_hspec
@@ -517,7 +517,7 @@ Proof.
   spec_impl; finish.
 Qed.
 
-Local Hint Resolve data_read_ok.
+Local Hint Resolve data_read_ok : core.
 
 Lemma phy_data_write:
   forall (ps : PhysicalState) (a : nat) (v : block) (s : D.ODLayer.(State)),
@@ -536,7 +536,7 @@ Proof.
   destruct (index_dec data i); propositional; array.
 Qed.
 
-Local Hint Resolve phy_data_write.
+Local Hint Resolve phy_data_write : core.
 
 Theorem data_write_ok ps a v :
   proc_hspec
@@ -564,7 +564,7 @@ Proof.
   spec_impl; split_wlog; simplify; finish.
 Qed.
 
-Local Hint Resolve data_write_ok.
+Local Hint Resolve data_write_ok : core.
 
 Theorem log_write_ok ps a v :
   proc_hspec

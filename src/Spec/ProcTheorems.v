@@ -18,7 +18,7 @@ Section Dynamics.
   Notation exec_recover := sem.(exec_recover).
   Notation rexec := sem.(rexec).
 
-  Hint Resolve rimpl_refl requiv_refl.
+  Hint Resolve rimpl_refl requiv_refl : core.
 
   Theorem exec_halt_finish T (p: proc T) :
     exec p;; pure tt ---> exec_halt p.

@@ -13,9 +13,9 @@ Definition logical_abstraction (d: D.State) ps ls :=
   LogDecode ps ls /\
   ls.(ls_committed) = false.
 
-Local Hint Resolve recovery_ok.
-Local Hint Resolve log_apply_spec_idempotent_crash_step_notxn'.
-Local Hint Resolve log_apply_spec_idempotent_crash_step'.
+Local Hint Resolve recovery_ok : core.
+Local Hint Resolve log_apply_spec_idempotent_crash_step_notxn' : core.
+Local Hint Resolve log_apply_spec_idempotent_crash_step' : core.
 
 Definition general_rspec ls0 T (p_hspec: Specification T unit D.State) :=
   proc_hspec_to_rspec
@@ -39,7 +39,7 @@ Definition mk_rspec ls0 T (p_hspec: Specification T unit D.State) :=
                   let 'recghost ps ls _ := a in
                   log_apply_spec ps ls ls.(ls_disk) false).
 
-Local Hint Resolve log_read_ok.
+Local Hint Resolve log_read_ok : core.
 
 Theorem log_read_rec_ok ps ls a :
   proc_rspec
@@ -76,7 +76,7 @@ Proof.
     simpl; auto.
 Qed.
 
-Local Hint Resolve log_write_ok.
+Local Hint Resolve log_write_ok : core.
 
 Theorem log_write_rec_ok ps ls a v :
   proc_rspec
@@ -127,7 +127,7 @@ Proof.
     simpl; auto.
 Qed.
 
-Local Hint Resolve log_commit_ok.
+Local Hint Resolve log_commit_ok : core.
 
 Theorem log_commit_rec_ok ps ls :
   proc_rspec
@@ -179,7 +179,7 @@ Proof.
       right; split_cases; finish.
 Qed.
 
-Local Hint Resolve log_size_ok.
+Local Hint Resolve log_size_ok : core.
 
 Theorem log_size_rec_ok ps ls :
   proc_rspec
@@ -215,7 +215,7 @@ Proof.
     simpl; auto.
 Qed.
 
-Local Hint Resolve recovery_ok.
+Local Hint Resolve recovery_ok : core.
 
 Theorem recovery_rec_ok ps ls :
   proc_rspec
@@ -273,7 +273,7 @@ Ltac rspec_impl :=
   [ unfold spec_impl | solve [ eauto ] ];
   simpl; propositional.
 
-Local Hint Resolve log_read_rec_ok.
+Local Hint Resolve log_read_rec_ok : core.
 
 Ltac destruct_txnd :=
   let t H :=
@@ -305,7 +305,7 @@ Proof.
   - eexists (_, _); intuition eauto.
 Qed.
 
-Local Hint Resolve log_write_rec_ok.
+Local Hint Resolve log_write_rec_ok : core.
 
 Theorem log_write_abs_ok a v :
   proc_refines (log_write a v)
@@ -334,7 +334,7 @@ Proof.
   - eexists (_, _); (intuition eauto); simpl.
 Qed.
 
-Local Hint Resolve log_size_rec_ok.
+Local Hint Resolve log_size_rec_ok : core.
 
 Theorem log_size_abs_ok :
   proc_refines (log_size)
@@ -357,7 +357,7 @@ Proof.
   - eexists (_, _); intuition eauto.
 Qed.
 
-Local Hint Resolve log_commit_rec_ok.
+Local Hint Resolve log_commit_rec_ok : core.
 
 Theorem log_commit_abs_ok :
   proc_refines (commit)
@@ -382,7 +382,7 @@ Proof.
   - eexists (_, _); intuition eauto.
 Qed.
 
-Local Hint Resolve recovery_rec_ok.
+Local Hint Resolve recovery_rec_ok : core.
 
 Theorem recovery_abs_ok :
   proc_refines (recovery)

@@ -172,9 +172,9 @@ Module ReplicatedDisk.
     destruct state; unfold missing; simpl; intuition auto.
   Qed.
 
-  Hint Resolve missing0_implies_any.
-  Hint Resolve missing1_implies_any.
-  Hint Resolve read_ok write_ok size_ok.
+  Hint Resolve missing0_implies_any : core.
+  Hint Resolve missing1_implies_any : core.
+  Hint Resolve read_ok write_ok size_ok : core.
 
   Theorem read_int_ok : forall a d,
       proc_hspec TDLayer
@@ -198,7 +198,7 @@ Module ReplicatedDisk.
     repeat (step; destruct r).
   Qed.
 
-  Hint Resolve read_int_ok.
+  Hint Resolve read_int_ok : core.
 
   Theorem write_int_ok : forall a b d,
       proc_hspec TDLayer
@@ -239,7 +239,7 @@ Module ReplicatedDisk.
     destruct r; step.
   Qed.
 
-  Hint Resolve write_int_ok.
+  Hint Resolve write_int_ok : core.
 
   Theorem size_int_ok d_0 d_1:
     proc_hspec TDLayer
@@ -268,7 +268,7 @@ Module ReplicatedDisk.
     destruct r; step.
   Qed.
 
-  Hint Resolve size_int_ok.
+  Hint Resolve size_int_ok : core.
 
   Definition equal_after a (d_0 d_1: disk) :=
     length d_0 = length d_1 /\
@@ -294,7 +294,7 @@ Module ReplicatedDisk.
     autorewrite with array; auto.
   Qed.
 
-  Hint Resolve equal_after_assign.
+  Hint Resolve equal_after_assign : core.
 
   Theorem init_at_ok : forall a d_0 d_1,
       proc_hspec TDLayer
@@ -324,7 +324,7 @@ Module ReplicatedDisk.
       + step; destruct r; finish.
   Qed.
 
-  Hint Resolve init_at_ok.
+  Hint Resolve init_at_ok : core.
 
   Theorem sizeInit_ok d_0 d_1 :
     proc_hspec TDLayer
@@ -361,7 +361,7 @@ Module ReplicatedDisk.
       + step.
   Qed.
 
-  Hint Resolve sizeInit_ok.
+  Hint Resolve sizeInit_ok : core.
 
 
   Theorem equal_after_0_to_eq : forall d_0 d_1,
@@ -383,8 +383,8 @@ Module ReplicatedDisk.
     autorewrite with array; eauto.
   Qed.
 
-  Hint Resolve equal_after_size.
-  Hint Resolve equal_after_0_to_eq.
+  Hint Resolve equal_after_size : core.
+  Hint Resolve equal_after_0_to_eq : core.
 
   Theorem init'_ok d_0 d_1:
     proc_hspec TDLayer
@@ -547,8 +547,8 @@ Module ReplicatedDisk.
   Qed.
 
   Hint Rewrite assign_maybe_same using (solve [ auto ]) : array.
-  Hint Resolve PeanoNat.Nat.lt_neq.
-  Hint Resolve disks_eq_inbounds.
+  Hint Resolve PeanoNat.Nat.lt_neq : core.
+  Hint Resolve disks_eq_inbounds : core.
 
   (* we will show that fixup does nothing once the disks are the same *)
   Theorem fixup_equal_ok : forall a d,
@@ -742,7 +742,7 @@ Module ReplicatedDisk.
         destruct v; finish.
   Qed.
 
-  Hint Resolve fixup_ok.
+  Hint Resolve fixup_ok : core.
 
   (* Hint Resolve Lt.lt_n_Sm_le. *)
 
@@ -807,7 +807,7 @@ Module ReplicatedDisk.
         ** step.
   Qed.
 
-  Hint Resolve recover_at_ok.
+  Hint Resolve recover_at_ok : core.
 
   Definition Recover_spec : _ -> _ -> Specification unit unit State :=
     fun d s state =>
@@ -1003,7 +1003,7 @@ Module ReplicatedDisk.
     - simplify. exists d; split; eauto.
   Qed.
 
-  Hint Resolve read_rec_ok size_rec_ok write_rec_ok.
+  Hint Resolve read_rec_ok size_rec_ok write_rec_ok : core.
 
   Import Helpers.RelationAlgebra.
   Import RelationNotations.
@@ -1027,8 +1027,8 @@ Module ReplicatedDisk.
     (D.one_disk_failure + r)%rel x x tt.
   Proof. left. econstructor. Qed.
 
-  Hint Resolve one_disk_failure_id one_disk_failure_id_l.
-  Hint Constructors D.op_step.
+  Hint Resolve one_disk_failure_id one_disk_failure_id_l : core.
+  Hint Constructors D.op_step : core.
 
   Lemma compile_refine_TD_OD:
     compile_op_refines_step TDLayer D.ODLayer Impl_TD_OD rd_abstraction.

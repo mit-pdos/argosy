@@ -37,7 +37,7 @@ Inductive LogDecode : PhysicalState -> LogicalState -> Prop :=
 
 Local Notation proc_hspec := (Hoare.proc_hspec D.ODLayer.(sem)).
 
-Local Hint Resolve data_read_ok.
+Local Hint Resolve data_read_ok : core.
 
 Ltac match_abs ::=
   match goal with
@@ -62,7 +62,7 @@ Proof.
   inversion 1; auto.
 Qed.
 
-Hint Resolve logd_disk.
+Hint Resolve logd_disk : core.
 
 Lemma logd_loglen ps ls :
   LogDecode ps ls ->
@@ -78,7 +78,7 @@ Proof.
   inversion 1; auto.
 Qed.
 
-Hint Resolve logd_committed.
+Hint Resolve logd_committed : core.
 
 Lemma logd_log_contents ps ls :
   LogDecode ps ls ->
@@ -128,7 +128,7 @@ Proof.
   rewrite (logd_disk ltac:(eassumption)) in *; auto.
 Qed.
 
-Local Hint Resolve log_write_ok.
+Local Hint Resolve log_write_ok : core.
 
 Lemma length_descriptor (desc:Descriptor) :
   length desc = LOG_LENGTH.
@@ -168,7 +168,7 @@ Proof.
     + apply H1; omega.
 Qed.
 
-Hint Resolve log_decode_app.
+Hint Resolve log_decode_app : core.
 
 Fixpoint zip A B (l1: list A) (l2: list B) : list (A*B) :=
   match l1, l2 with
@@ -233,7 +233,7 @@ Proof.
     erewrite zip_index; eauto; autorewrite with length; try omega.
 Qed.
 
-Hint Resolve log_decode_some_log.
+Hint Resolve log_decode_some_log : core.
 
 Theorem log_write_ok ps ls a v :
   proc_hspec
@@ -293,7 +293,7 @@ Proof.
   erewrite logd_log_value by eauto; auto.
 Qed.
 
-Hint Resolve log_decode_apply_one.
+Hint Resolve log_decode_apply_one : core.
 
 Theorem log_apply_one_more : forall d log i a v len,
     index log i = Some (a, v) ->
@@ -323,10 +323,10 @@ Proof.
     rewrite assign_assign_ne by auto; auto.
 Qed.
 
-Hint Resolve logd_log_value.
-Hint Extern 3 (_ < _) => omega.
-Hint Extern 3 (_ <= _) => omega.
-Hint Extern 3 (@eq nat _ _) => omega.
+Hint Resolve logd_log_value : core.
+Hint Extern 3 (_ < _) => omega : core.
+Hint Extern 3 (_ <= _) => omega : core.
+Hint Extern 3 (@eq nat _ _) => omega : core.
 
 Definition applied_after log i d0 :=
   massign (subslice log i (length log - i)) d0.
@@ -335,7 +335,7 @@ Definition fully_applied log d0 :=
   massign log d0.
 
 Section ApplyAtRespec.
-  Hint Resolve apply_at_ok.
+  Hint Resolve apply_at_ok : core.
 
   Theorem log_apply_at_ok ps ls d0 desc i :
     proc_hspec
@@ -392,7 +392,7 @@ Section ApplyAtRespec.
   Qed.
 End ApplyAtRespec.
 
-Hint Resolve log_apply_at_ok.
+Hint Resolve log_apply_at_ok : core.
 
 Theorem apply_upto_ok ps ls d0 desc len i :
   proc_hspec
@@ -467,10 +467,10 @@ Proof.
       erewrite <- log_apply_reapply_one by eauto; auto. }
 Qed.
 
-Local Hint Resolve gethdr_ok.
-Local Hint Resolve getdesc_ok.
-Local Hint Resolve apply_upto_ok.
-Local Hint Resolve writehdr_ok.
+Local Hint Resolve gethdr_ok : core.
+Local Hint Resolve getdesc_ok : core.
+Local Hint Resolve apply_upto_ok : core.
+Local Hint Resolve writehdr_ok : core.
 
 Lemma LogDecode_clear_hdr:
   forall desc log_values data_region d',
@@ -488,7 +488,7 @@ Proof.
   omega.
 Qed.
 
-Hint Resolve LogDecode_clear_hdr.
+Hint Resolve LogDecode_clear_hdr : core.
 
 Definition log_apply_spec ps ls d0 is_commit : Specification unit unit disk :=
     (fun state =>
@@ -659,7 +659,7 @@ Proof.
     end; simpl in *; repeat simpl_match; simplify; finish.
 Qed.
 
-Local Hint Resolve phy_log_size_ok.
+Local Hint Resolve phy_log_size_ok : core.
 
 Theorem log_size_ok ps ls :
   proc_hspec
@@ -678,7 +678,7 @@ Proof.
   erewrite logd_disk by eauto; auto.
 Qed.
 
-Local Hint Resolve phy_log_init_ok.
+Local Hint Resolve phy_log_init_ok : core.
 
 Theorem log_init_ok :
   proc_hspec
@@ -709,7 +709,7 @@ Proof.
   omega.
 Qed.
 
-Hint Resolve log_apply_ok.
+Hint Resolve log_apply_ok : core.
 
 Lemma LogDecode_setcommit:
   forall (ps : PhysicalState) (ls : LogicalState),
@@ -728,7 +728,7 @@ Proof.
   destruct H0; constructor; simpl; propositional; array.
 Qed.
 
-Hint Resolve LogDecode_setcommit.
+Hint Resolve LogDecode_setcommit : core.
 
 Theorem log_commit_ok ps ls :
   proc_hspec

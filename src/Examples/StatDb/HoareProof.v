@@ -71,7 +71,7 @@ Lemma write_op_ok :
     proc_hspec Var.dynamics (write i v) (op_spec Var.dynamics (Var.Write i v)).
 Proof. intros. eapply op_spec_sound. Qed.
 
-Hint Resolve read_op_ok write_op_ok.
+Hint Resolve read_op_ok write_op_ok : core.
 
 Ltac simplify :=
   repeat match goal with
@@ -103,7 +103,7 @@ Proof.
   unfold puts in *; firstorder; congruence.
 Qed.
 
-Hint Resolve recover_cok recover_idempotent.
+Hint Resolve recover_cok recover_idempotent : core.
 
 Lemma recover_rok : proc_rspec Var.dynamics (impl.(recover)) (impl.(recover)) recover_spec.
 Proof. eapply proc_hspec_to_rspec; eauto. intros []; eauto. Qed.
@@ -128,7 +128,7 @@ Lemma avg_ok :
   proc_rspec Var.dynamics (impl.(compile_op) (DB.Avg)) impl.(recover) (avg_rspec).
 Proof. eapply proc_hspec_to_rspec; [ eapply avg_cok |..]; eauto. intros []; eauto. Qed.
 
-Hint Resolve add_ok avg_ok init_cok.
+Hint Resolve add_ok avg_ok init_cok : core.
 
 Definition rf : LayerRefinement Var.l DB.l.
 Proof.

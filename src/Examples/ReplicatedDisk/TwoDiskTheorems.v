@@ -27,9 +27,9 @@ Section specs.
       proc_hspec TDBaseDynamics (td.size i) (op_spec TDBaseDynamics (op_size i)).
   Proof. intros. eapply op_spec_sound. Qed.
 
-  Hint Resolve read_op_ok.
-  Hint Resolve write_op_ok.
-  Hint Resolve size_op_ok.
+  Hint Resolve read_op_ok : core.
+  Hint Resolve write_op_ok : core.
+  Hint Resolve size_op_ok : core.
 
 
   (** We now define easier-to-use specifications written in terms of
@@ -165,11 +165,11 @@ Section specs.
     intuition eauto; cleanup;
     intuition eauto; cleanup.
 
-  Hint Resolve holds_in_some_eq.
-  Hint Resolve holds_in_none_eq.
-  Hint Resolve pred_missing.
+  Hint Resolve holds_in_some_eq : core.
+  Hint Resolve holds_in_none_eq : core.
+  Hint Resolve pred_missing : core.
 
-  Hint Resolve tt.
+  Hint Resolve tt : core.
 
 
   Theorem read_ok : forall i a dF, proc_hspec TDBaseDynamics (td.read i a) (read_spec i a dF).
@@ -206,4 +206,4 @@ Section specs.
   Qed.
 End specs.
 
-Hint Resolve write_ok size_ok read_ok.
+Hint Resolve write_ok size_ok read_ok : core.

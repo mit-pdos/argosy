@@ -144,7 +144,7 @@ Section OutputRelations.
     firstorder.
   Qed.
 
-  Hint Immediate rimpl_to_requiv requiv_to_rimpl1 requiv_to_rimpl2.
+  Hint Immediate rimpl_to_requiv requiv_to_rimpl1 requiv_to_rimpl2 : core.
 
   (* we define an ordering over relations ---> in a natural way for relations,
   but the definition is equivalent to starting with equivalence [<--->] and
@@ -294,7 +294,7 @@ Section OutputRelations.
     apply and_then_equiv_cong; auto.
   Qed.
 
-  Hint Constructors seq_star.
+  Hint Constructors seq_star : core.
 
   Global Instance seq_star_respectful :
     Proper (rimpl ==> rimpl) (seq_star (A:=A) (T:=T)).
@@ -311,7 +311,7 @@ Section OutputRelations.
     eapply seq_star_respectful; eauto.
   Qed.
 
-  Hint Constructors bind_star.
+  Hint Constructors bind_star : core.
 
   Global Instance bind_star_respectful :
     Proper (pointwise_relation _ rimpl ==> eq ==> rimpl) (bind_star (A:=A) (T:=T)).
@@ -498,7 +498,7 @@ Section OutputRelations.
   Definition rimpl_refl A B T (r: relation A B T) : r ---> r := ltac:(reflexivity).
   Definition requiv_refl A B T (r: relation A B T) : r <---> r := ltac:(reflexivity).
 
-  Hint Resolve rimpl_refl requiv_refl.
+  Hint Resolve rimpl_refl requiv_refl : core.
 
   Theorem bind_dist_r A B C T1 T2 (r1 r2: relation A B T1) (r3: T1 -> relation B C T2) :
     and_then (r1 + r2) r3 <---> (and_then r1 r3) + (and_then r2 r3).
@@ -554,7 +554,7 @@ Section OutputRelations.
     t.
   Qed.
 
-  Hint Constructors seq_plus.
+  Hint Constructors seq_plus : core.
 
   Theorem plus_one `(r: relation A A T) :
     r ---> seq_plus r.
@@ -578,7 +578,7 @@ Section OutputRelations.
       r y z o2 ->
       seq_plus_r r x z o2.
 
-  Hint Constructors seq_plus_r.
+  Hint Constructors seq_plus_r : core.
 
   Theorem seq_plus_lr `(r: relation A A T) :
     seq_plus r <---> seq_plus_r r.
@@ -759,7 +759,7 @@ Section OutputRelations.
       r y z o2 ->
       seq_star_r r x z o1.
 
-  Hint Constructors seq_star_r.
+  Hint Constructors seq_star_r : core.
 
   Theorem seq_star_lr A `(r: relation A A T) :
     seq_star r <---> seq_star_r r;; identity.
@@ -775,7 +775,7 @@ Section OutputRelations.
       all: auto.
   Qed.
 
-  Hint Constructors bind_star_r.
+  Hint Constructors bind_star_r : core.
 
   Theorem bind_star_lr A `(r: T -> relation A A T) (v:T) :
     bind_star r v <---> bind_star_r r v.

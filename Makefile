@@ -1,4 +1,4 @@
-SRC_DIRS := 'src' $(shell test -d 'vendor' && echo 'vendor')
+SRC_DIRS := 'src' $(shell test -d 'vendor' && echo 'vendor') 'logging-client'
 ALL_VFILES := $(shell find $(SRC_DIRS) -name "*.v")
 TEST_VFILES := $(shell find 'src' -name "*Tests.v")
 PROJ_VFILES := $(shell find 'src' -name "*.v")
@@ -34,10 +34,17 @@ endif
 	@echo "COQC $<"
 	@coqc $(COQARGS) $(shell cat '_CoqProject') $< -o $@
 
+extract: logging-client/extract/ComposedRefinement.hs
+
+logging-client/extract/ComposedRefinement.hs: logging-client/Extract.vo
+	./scripts/add-preprocess.sh logging-client/extract/*.hs
+
 clean:
 	@echo "CLEAN vo glob aux"
 	@rm -f $(ALL_VFILES:.v=.vo) $(ALL_VFILES:.v=.glob)
 	@find $(SRC_DIRS) -name ".*.aux" -exec rm {} \;
+	@echo "CLEAN extraction"
+	@rm -rf logging-client/extract/*.hs
 	rm -f _CoqProject .coqdeps.d
 
 .PHONY: default test clean

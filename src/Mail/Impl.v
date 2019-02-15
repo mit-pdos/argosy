@@ -8,11 +8,11 @@ From RecoveryRefinement Require Export CSL.WeakestPre CSL.Lifting.
 From RecoveryRefinement Require Import Database.Proof.BaseMachine.
 
 From iris.algebra Require Import auth frac_auth.
+From iris.base_logic.lib Require Import invariants.
 
 
 Axiom pid_to_tmpfile : uint64 -> Path.
 Axiom rnd_to_msgfile : uint64 -> Path.
-Axiom is_tmpfile : Path -> bool.
 
 Section MailServer.
 
@@ -60,23 +60,23 @@ Section MailServer.
     FS.delete fn.
 
 
-  Theorem deliver_ok G g pid msg gm :
-    {{{ ▷ (dirents G ∗ own g (◯ (Excl' false))) ∗ ⌜G !! (pid_to_tmpfile pid) = Some g⌝ }}}
+  Theorem deliver_ok G g pid msg :
+    {{{ dir_inv G ∗ ▷ own g (◯ (Excl' false)) ∗ ⌜G !! (pid_to_tmpfile pid) = Some g⌝ }}}
       deliver pid msg
-      {{{ RET (); ∃ msgid, dirents G ∗ own g (◯ (Excl' false)) ∗ own gm (◯ (Excl' true)) ∗ ⌜G !! msgid = Some gm⌝ ∗ msgid ↦ msg }}}.
+      {{{ RET (); own g (◯ (Excl' false)) }}}.
   Proof.
-    iIntros (Φ) "(H&#Hx) Post".
+    iIntros (Φ) "(#Hinv&Hown&#Heq) Post".
     unfold deliver.
 
     wp_bind.
-    iApply (wp_create with "[H Hx]").
+    iApply (wp_create with "[Hinv Hown Heq]").
     iFrame. eauto.
-    iIntros (fh) "!> (Hd&Ho&Ht&Hfd)".
+    iIntros (fh) "!> (Hown&Htmp&Hfd)".
 
     wp_bind.
-    iApply (wp_append with "[Ht Hfd]").
+    iApply (wp_append with "[Htmp Hfd]").
     iFrame.
-    iIntros "!> (Ht&Hfd)".
+    iIntros "!> (Htmp&Hfd)".
 
     wp_bind.
     iApply (wp_close with "Hfd").
@@ -93,23 +93,21 @@ Section MailServer.
     iIntros (rnd) "!> _".
 
     wp_bind.
-    iApply (wp_link with "[Hd Ht]").
-    iFrame.
+    iApply (wp_link with "[Hinv Htmp]").
+    iFrame. eauto.
     iIntros (ok).
     destruct ok.
 
-    - iIntros "!> (Hd&Ht&Hr&Hot&Hy)".
+    - iIntros "!> (Htmp&Hrnd)".
       wp_ret.
       iNext.
       wp_ret.
-      iApply (wp_delete with "[Hd Ho Ht Hx]").
+      iApply (wp_delete with "[Hinv Hown Htmp Heq]").
       iFrame. eauto.
 
       iNext.
-      iIntros "(Hd&Ho)".
+      iIntros "Hown".
       iApply "Post".
-      iExists _.
-      rewrite app_empty.
       iFrame.
 
     - iIntros "!> (Hd&Ht)".
@@ -118,6 +116,62 @@ Section MailServer.
       iApply ("IHloop" with "Post Hd Ho").
       iFrame.
   Qed.
+
+
+
+(*
+  What's going on with [iInv] here???
+
+
+
+  Definition mbox_inv_inner (G : gmap Path gname) : iProp Σ :=
+    ( ∃ msgs,
+      mbox_rep G msgs )%I.
+
+  Definition mbox_inv (G : gmap Path gname) : iProp Σ :=
+    inv mboxN (mbox_inv_inner G).
+
+
+
+  Definition deliver2 (pid : uint64) (msg : ByteString) :=
+    res <- deliver pid msg;
+    Ret res.
+
+  Theorem deliver_inv_ok G g pid msg :
+    {{{ mbox_inv G ∗ ▷ (own g (◯ (Excl' false))) ∗ ⌜G !! (pid_to_tmpfile pid) = Some g⌝ }}}
+      deliver2 pid msg
+      {{{ RET (); mbox_inv G ∗ own g (◯ (Excl' false)) }}}.
+  Proof.
+    iIntros (phi) "(#Hinv&H&#He) Post".
+    unfold mbox_inv.
+
+    wp_bind.
+    wp_bind.
+    iInv mboxN as "_".
+
+    iApply deliver_ok.
+    iInv mboxN as "H".
+
+    iInv mboxN as "Hz" "Hclose".
+    iApply deliver_ok.
+    iNext.
+*)
+
+  Theorem pickup_ok G msgs :
+    {{{ ▷ mbox_rep G msgs }}}
+      pickup
+      {{{ ret, RET ret;
+          mbox_rep G msgs ∗ ⌜∀ msgid msg, (msgid, msg) ∈ msgs -> (msgid, msg) ∈ ret⌝ }}}.
+  Proof.
+    iIntros (Φ) "(Hd&Hrep) Post".
+    unfold pickup.
+    wp_bind.
+
+    iApply (wp_list with "Hd").
+    iIntros (r).
+    iNext.
+    iIntros "(Hr&Hd)".
+
 
 
 End MailServer.

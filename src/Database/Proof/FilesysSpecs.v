@@ -16,9 +16,9 @@ Section lifting.
   Definition dirents (S: list Path) : iProp Σ.
   Admitted.
 
-  Theorem wp_create S p :
-    {{{ ▷ dirents S ∗ ⌜~p ∈ S⌝ }}}
-      FS.create p
+  Theorem wp_create S p s E :
+    {{{ ▷ (dirents S ∗ ⌜~p ∈ S⌝) }}}
+      FS.create p @ s; E
       {{{ fh, RET fh; dirents (p::S) ∗ p ↦ BS.empty ∗ fh ↦ (p, FS.Write) }}}.
   Admitted.
 
@@ -95,7 +95,7 @@ Section DerivedSpecs.
   Definition readFile p fh bs := p ↦ bs ∗ fh ↦ (p, FS.Read).
 
   Theorem create_ok S p :
-    {{{ ▷ dirents S ∗ ⌜~p ∈ S⌝ }}}
+    {{{ ▷ (dirents S ∗ ⌜~p ∈ S⌝) }}}
       FS.create p
       {{{ fh, RET fh; dirents (p::S) ∗ appendFile p fh BS.empty }}}.
   Proof.

@@ -51,8 +51,9 @@ script:
     make -j${NJOBS} -k default extract
     chmod -R a+rw logging-client
     "
-- cd logging-client && stack --allow-different-user test
-- cd logging-client && ./demo.sh
+- cd logging-client
+- stack --allow-different-user test
+- ./demo.sh
 - echo -en 'travis_fold:end:build\\r'
 
 after_script:

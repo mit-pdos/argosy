@@ -5,6 +5,10 @@ language: generic
 services:
   - docker
 
+cache:
+  directories:
+    - $HOME/.stack
+
 env:
   global:
   - NJOBS="2"

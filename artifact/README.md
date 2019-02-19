@@ -39,11 +39,11 @@ Note that running `stack` and `demo.sh` requires your working directory to be
 
 # Connections between paper and code
 
-Whenever we talk about a type $O$ of operations they are represented by a type
-constructor `Op : Type -> Type`.
+## Section 2 (encoding the semantics)
 
-- An **abstraction layer $L$ (L205)** corresponds to the type `Spec.Layer.Layer`.
-  The type is indexed by $O$.
+- An **abstraction layer $L$ (L205)** corresponds to the type
+  `Spec.Layer.Layer`. The type is indexed by a type constructor `Op : Type ->
+  Type` for operations, written $O$ in the paper.
 - **$\operatorname{Proc}_L$ (L259)** is indexed by a layer. The codebase has `Spec.Proc.proc`
   indexed by just `Op : Type -> Type` (the other components of layers do not
   influence syntax, only semantics).
@@ -54,6 +54,9 @@ constructor `Op : Type -> Type`.
 - The **dynamics of programs** defined by $\operatorname{exec(e)}$,
   $\operatorname{execHalt}(e)$, and $\operatorname{rexec}(e, r)$, correspond to
   `Spec.Proc`.
+
+## Section 3 (metatheory)
+
 - **Definition 2, recovery refinement (L481)** correspond to
   `Spec.Layer.LayerRefinement`. Implementations $I$ are of type
   `Spec.Layer.LayerImpl`, which is indexed by the two operation type
@@ -78,6 +81,25 @@ constructor `Op : Type -> Type`.
   has the composed implementation inside it (built using `layer_impl_compose`)
   as well as proofs for all the recovery refinement obligations. Because we want
   to run this implementation the proof ends with `Defined` instead of `Qed`.
+
+## Section 4 (Crash Hoare Logic)
+
+- The **recovery quadruple (L733)** and **halt specification (L754)** correspond
+  to `Spec.Hoare`'s `proc_rspec` and `proc_hspec`, respectively. The type of
+  specifications is common to these and uses the term "alternate" for the halt
+  or recovery condition, depending on context.
+- While unfortunately not described in the paper, CHL specs connect to recovery
+  refinement via a set of definitions and theorems in `Spec.AbstractionSpec`.
+  First, the definition `refine_spec` captures a pattern of writing specs at a
+  higher layer of abstraction using an abstraction relation in the pre-, post-,
+  and recovery/halt condition. Second, the file has a number of generic theorems
+  that connect Hoare specs to refinement. This connection is a bit messy
+  (there's some boilerplate when proving a refinement property from specs, as
+  seen in `Examples.ReplicatedDisk.ReplicatedDiskImpl.compile_refine_TD_OD`, for
+  example).
+- The **idempotence-ghost rule (L811)** corresponds to
+  `Spec.Hoare.proc_hspec_to_rspec` (we don't prove the weaker idempotence
+  principle from FSCQ's CHL).
 
 # Source code overview
 

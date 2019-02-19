@@ -1,6 +1,8 @@
-# Argosy: Verifying layered storage systems with recovery refinement
+---
+title: "Argosy: Verifying layered storage systems with recovery refinement"
+---
 
-## Kicking the tires
+# Kicking the tires
 
 You'll need Coq (we regularly test with v8.8.2, v8.9, and master) to compile the proofs.
 
@@ -35,7 +37,49 @@ stack test
 Note that running `stack` and `demo.sh` requires your working directory to be
 `logging-client`.
 
-## Source code overview
+# Connections between paper and code
+
+Whenever we talk about a type $O$ of operations they are represented by a type
+constructor `Op : Type -> Type`.
+
+- An **abstraction layer $L$ (L205)** corresponds to the type `Spec.Layer.Layer`.
+  The type is indexed by $O$.
+- **$\operatorname{Proc}_L$ (L259)** is indexed by a layer. The codebase has `Spec.Proc.proc`
+  indexed by just `Op : Type -> Type` (the other components of layers do not
+  influence syntax, only semantics).
+- **$\operatorname{Rel}(A, B, T)$** (L299) and its associated definitions are in
+  `Helpers.RelationAlgebra`. The theorems listed in **Figure 3 (L338)** are also
+  in this file (eg, `and_then_monotonic`, `seq_sliding`, `denesting`, and
+  `simulation_seq`).
+- The **dynamics of programs** defined by $\operatorname{exec(e)}$,
+  $\operatorname{execHalt}(e)$, and $\operatorname{rexec}(e, r)$, correspond to
+  `Spec.Proc`.
+- **Definition 2, recovery refinement (L481)** correspond to
+  `Spec.Layer.LayerRefinement`. Implementations $I$ are of type
+  `Spec.Layer.LayerImpl`, which is indexed by the two operation type
+  constructors. Refinements are indexed by both layers (the section variables
+  `c_layer` and `a_layer`).
+- **Theorem 3 (L539) and Theorem 4 (L563)** are crucial lemmas relating compiled
+  and abstract executions. They correspond to the theorems
+  `Spec.Layer.compile_exec_ok` and `Spec.Layer.compile_rexec_ok`. The former's
+  proof is mostly equational reasoning so it largely consists of the relation
+  algebra tactics `norm`, and `rew` (which wraps `rewrite` and `setoid_rewrite`
+  for rewriting by relational (in)equalities). The latter proof is also largely
+  Kleene algebra inequational reasoning (some of which is in `rexec_star_rec`).
+  The equality shown in L572-577 is `Spec.ProcTheorems.exec_recover_bind`.
+- **Theorem 5, Correctness for sequences (L650)**, the main correctness theorem
+  for a layer implementation, corresponds to
+  `Spec.Layer.complete_exec_seq_ok_unfolded`. There are several variants above
+  this definition, but this theorem's statement is the easiest to understand
+  since it refers to more basic definitions.
+- **Theorem 6, Composition (L677)**, the theorem that makes layer proofs
+  modular, corresponds to `Spec.Layer.refinement_transitive`. The theorem as
+  stated in Coq is _computationally relevant_; that is, the produced refinement
+  has the composed implementation inside it (built using `layer_impl_compose`)
+  as well as proofs for all the recovery refinement obligations. Because we want
+  to run this implementation the proof ends with `Defined` instead of `Qed`.
+
+# Source code overview
 
 The [src](src/) subdirectory contains the Coq development. Within that directory:
 

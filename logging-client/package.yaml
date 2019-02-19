@@ -1,8 +1,8 @@
 name:                logging-client
 version:             0.1.0.0
-license:             BSD3
+license:             MIT
 author:              "Argosy authors"
-copyright:           "2018 Argosy authors"
+copyright:           "2019 Argosy authors"
 
 description:         Please see the Argosy README
 

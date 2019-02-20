@@ -129,6 +129,13 @@ tests for the properties we assume in Coq. We do use nats for simplicity in the
 Coq representation, so these encoders will fail at runtime if disk addresses
 overflow a 64-bit integer.
 
+## Section 6
+
+The script that produces the lines of code table at L1177 is provided in the
+artifact; run `loc.sh <root of artifact>` to reproduce these numbers. The LaTeX
+table was manually constructed from the output, which includes more details for
+debugging.
+
 # Source code overview
 
 The [src](src/) subdirectory contains the Coq development. Within that directory:

@@ -6,7 +6,8 @@ VFILES := $(filter-out $(TEST_VFILES),$(PROJ_VFILES))
 
 COQARGS :=
 
-default: $(VFILES:.v=.vo)
+all: coq extract
+coq: $(VFILES:.v=.vo)
 test: $(TEST_VFILES:.v=.vo) $(VFILES:.v=.vo)
 
 _CoqProject: libname $(wildcard vendor/*)
@@ -47,5 +48,5 @@ clean:
 	@rm -rf logging-client/extract/*.hs
 	rm -f _CoqProject .coqdeps.d
 
-.PHONY: default test clean
+.PHONY: all coq test clean extract
 .DELETE_ON_ERROR:

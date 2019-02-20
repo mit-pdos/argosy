@@ -100,6 +100,34 @@ Note that running `stack` and `demo.sh` requires your working directory to be
 - The **idempotence-ghost rule (L811)** corresponds to
   `Spec.Hoare.proc_hspec_to_rspec` (we don't prove the weaker idempotence
   principle from FSCQ's CHL).
+- One of the more interesting parts of **Figure 6 (L890)** is the sequencing
+  rule for halt specs; this corresponds to `Spec.Hoare.proc_hspec_rx`. Weakening
+  corresponds to `Spec.Hoare.proc_hspec_impl` (though most of the theorem
+  statement is in the `spec_impl` definition).
+
+## Section 5 (Examples)
+
+For a simple illustration of the framework, we recommend reading
+`Examples/StatDb/Impl.v` followed by `Examples.StatDb/HoareProof.v`. The
+abstract layer as two operations: `add(n:nat)` to store in the database and
+`avg() : Op nat` to get the average of the numbers added so far. These two
+operations are implemented using two variables, one for the number of elements
+and the other for the running sum. The database is cleared on a crash, so there
+is no crash or recovery reasoning, and there is only a single layer, but the
+example illustrates writing layer definitions, CHL specs, and proving refinement
+all the same.
+
+The more complete examples in the paper are in `Examples/ReplicatedDisk/` and
+`Examples/Logging/`. The two layers are composed together as described in
+**Figure 10 (L1111)** in `Examples.Logging.ComposedRefinement`, which simply
+applies `refinement_transitive` to the two layer implementations.
+
+The logging layer relies on unverified encoders for converting the logging data
+structures to and from blocks. These axioms are then replaced by Haskell
+implementations during extraction, and those implementations have QuickCheck
+tests for the properties we assume in Coq. We do use nats for simplicity in the
+Coq representation, so these encoders will fail at runtime if disk addresses
+overflow a 64-bit integer.
 
 # Source code overview
 

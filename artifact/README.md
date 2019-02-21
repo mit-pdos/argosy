@@ -4,11 +4,16 @@ title: "Argosy: Verifying layered storage systems with recovery refinement"
 
 # Kicking the tires
 
-You'll need Coq (we regularly test with v8.8.2, v8.9, and master) to compile the proofs.
+You'll need Coq (we regularly test with v8.8.2, v8.9, and master) to compile the
+proofs. The easiest way to install Coq is [through
+opam](https://coq.inria.fr/opam-using.html).
 
-You'll need Haskell stack to build and run the logging example.
+You'll need [Haskell stack](https://docs.haskellstack.org/en/stable/README/) to
+build and run the logging example. The easiest way to install stack is with their installer (`wget -qO- https://get.haskellstack.org/ | sh`).
 
-If you want to compile from the repo, you can clone it from
+If you use macOS, you can install the dependencies with `brew install coq haskell-stack`. If you use Arch Linux you can use `sudo pacman -S coq haskell-stack`. The Ubuntu versions of both of these dependencies are too old.
+
+If you want to compile from the repo instead of this packaged release, you can clone it from
 [github.com/mit-pdos/argosy](https://github.com/mit-pdos/argosy). The main
 difference is that you'll also need to download the dependencies with `git
 submodule update --init --recursive`.

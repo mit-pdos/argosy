@@ -25,17 +25,13 @@ system, and a list of assumptions. These assumptions are:
   logging data structures.
 
 To compile the logging code, run its unit tests, and see a demo of using
-logging-client, run:
+logging-client, after compiling the Coq code (which also runs extraction), run:
 
 ```
-make extract
 cd logging-client
 stack test
 ./demo.sh
 ```
-
-Note that running `stack` and `demo.sh` requires your working directory to be
-`logging-client`.
 
 # Connections between paper and code
 

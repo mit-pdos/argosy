@@ -78,8 +78,8 @@
     },
     {
       "type": "file",
-      "source": "../argosy-artifact.tgz",
-      "destination": "/tmp/argosy-artifact.tar.gz"
+      "source": "../argosy-artifact.zip",
+      "destination": "/tmp/argosy-artifact.zip"
     },
     {
       "type": "shell",

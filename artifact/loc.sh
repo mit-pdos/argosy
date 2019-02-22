@@ -28,9 +28,9 @@ main() {
     exit 1
   fi
 
-  local tmp_db=$(mktemp -t "cloc.sqlite3")
+  local tmp_db=$(mktemp -t "cloc-XXX.sqlite3")
   cd "${ARGOSY_SRC}"
-  cloc --quiet --sql="-" --include-ext=v,hs src logging-client vendor | sqlite3 "$tmp_db"
+  cloc --quiet --sql="-" --include-lang=Coq,Haskell src logging-client vendor | sqlite3 "$tmp_db"
 
   get_totals() {
     sqlite3 -cmd ".mode line" "$tmp_db" \

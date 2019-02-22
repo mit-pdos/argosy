@@ -12,12 +12,19 @@ There are three ways to build Argosy:
 - Compile from a tag in the git repo
 - Compile within a provided Xubuntu virtual machine with dependencies pre-installed
 
-For the first two options, you'll need Coq (v8.8.2, v8.9, or master) to compile the main development and Haskell stack to build and run the logging and replicated disk example. We have no external Coq dependencies and stack provides reproducible, sandboxed builds. You'll also need `make`.
+To compile from source, you'll need Coq (v8.8.2, v8.9, or master) to compile the
+main development and Haskell stack to build and run the logging and replicated
+disk example. We have no external Coq dependencies and stack provides
+reproducible, sandboxed builds. You'll also need `make`.
 
 If you use macOS, you can install these dependencies with `brew install coq haskell-stack`. If you use Arch Linux you can use `sudo pacman -S coq haskell-stack`.
 
-The Ubuntu versions of both of these dependencies are too old, so you'll need to install them manually.
-The easiest way to install Coq is [through opam](https://coq.inria.fr/opam-using.html). The easiest way to install stack is with their installer (`wget -qO- https://get.haskellstack.org/ | sh`).
+The Ubuntu versions of both of these dependencies are too old, so you'll need to
+install them manually. The easiest way to install Coq is [through
+opam](https://coq.inria.fr/opam-using.html). The easiest way to install stack is
+with their installer (`wget -qO- https://get.haskellstack.org/ | sh`).
+
+### Building from source
 
 If you want to compile from the repo instead of this packaged release, you can clone it from
 [github.com/mit-pdos/argosy](https://github.com/mit-pdos/argosy):
@@ -28,9 +35,18 @@ cd argosy
 git checkout v0.1.0
 ```
 
-Note that we include some dependencies as git submodules (you can also get them with `git submodule update --init --recursive`).
+Note that we include some dependencies as git submodules.
 
-We also have a VirtualBox VM available at (TODO: upload VM appliance). The default settings are 4GB of RAM and 2 vCPUs, but Argosy builds in a couple minutes with as little as 1GB of RAM and 1 vCPU. The VM's default user has no password and sudo access. A copy of the artifact is in the home folder at `~ubuntu/argosy-artifact`.
+### Downloading the VM
+
+We also have a VirtualBox VM available at
+<https://www.dropbox.com/s/3p70ee0azbgs7lm/argosy-vm.ova?dl=1>. The VM image is
+2GB.
+
+The default settings are 4GB of RAM and 2 vCPUs, but Argosy builds in a couple
+minutes with as little as 1GB of RAM and 1 vCPU. The VM's default user has no
+password and sudo access. A copy of the artifact is in the home folder at
+`~ubuntu/argosy-artifact`.
 
 ## Compiling
 

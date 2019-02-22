@@ -2,6 +2,9 @@
 
 set -e
 
+# install dependencies
+sudo apt install opam virtualbox-guest-dkms virtualbox-guest-utils virtualbox-guest-utils vim firefox
+
 # install stack
 wget -qO- https://get.haskellstack.org/ | sh
 stack setup --resolver=lts-13.8

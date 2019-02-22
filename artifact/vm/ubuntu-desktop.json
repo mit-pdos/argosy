@@ -1,7 +1,7 @@
 {
   "variables": {
     "name": "argosy-vm",
-    "vm_description": "PLDI 2019 artifact #1",
+    "vm_description": "PLDI 2019 paper #30",
     "packer_images_output_dir": "/var/tmp/packer-templates-images",
     "cpus": "2",
     "memory": "4096",

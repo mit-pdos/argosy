@@ -4,21 +4,34 @@ title: "Argosy: Verifying layered storage systems with recovery refinement"
 
 # Kicking the tires
 
-You'll need Coq (we regularly test with v8.8.2, v8.9, and master) to compile the
-proofs. The easiest way to install Coq is [through
-opam](https://coq.inria.fr/opam-using.html).
+There are three ways to use this artifact:
+- Compile from this source distribution
+- Compile from a tag in the git repo
+- Compile within a provided Xubuntu virtual machine with dependencies pre-installed
 
-You'll need [Haskell stack](https://docs.haskellstack.org/en/stable/README/) to
-build and run the logging example. The easiest way to install stack is with their installer (`wget -qO- https://get.haskellstack.org/ | sh`).
+## Installing dependencies
 
-If you use macOS, you can install the dependencies with `brew install coq haskell-stack`. If you use Arch Linux you can use `sudo pacman -S coq haskell-stack`. The Ubuntu versions of both of these dependencies are too old.
+For the first two options, you'll need Coq (v8.8.2, v8.9, or master) to compile the main development and Haskell stack to build and run the logging and replicated disk example. We have no external Coq dependencies and stack provides reproducible, sandboxed builds. You'll also need `make`.
+
+If you use macOS, you can install these dependencies with `brew install coq haskell-stack`. If you use Arch Linux you can use `sudo pacman -S coq haskell-stack`.
+
+The Ubuntu versions of both of these dependencies are too old, so you'll need to install them manually.
+The easiest way to install Coq is [through opam](https://coq.inria.fr/opam-using.html). The easiest way to install stack is with their installer (`wget -qO- https://get.haskellstack.org/ | sh`).
 
 If you want to compile from the repo instead of this packaged release, you can clone it from
-[github.com/mit-pdos/argosy](https://github.com/mit-pdos/argosy). The main
-difference is that you'll also need to download the dependencies with `git
-submodule update --init --recursive`.
+[github.com/mit-pdos/argosy](https://github.com/mit-pdos/argosy):
 
-Running `make -j2` will compile the proofs and print two things: the type of the
+```
+git clone --recurse-submodules https://github.com/mit-pdos/argosy
+cd argosy
+git checkout v0.1.0
+```
+
+Note that we include some dependencies as git submodules (you can also get them with `git submodule update --init --recursive`).
+
+## Compiling
+
+Running `make` within the source will compile the proofs and print two things: the type of the
 main correctness theorem, applied to the composed logging and replication
 system, and a list of assumptions. These assumptions are:
 
@@ -28,6 +41,8 @@ system, and a list of assumptions. These assumptions are:
   extracted code.
 - `Impl.LogHdr_fmt` and `Impl.Descriptor_fmt`, axiomatic code to encode the
   logging data structures.
+
+The whole development should compile in under two minutes and within one GB of RAM (and under a minute with `make -j2`).
 
 To compile the logging code, run its unit tests, and see a demo of using
 logging-client, after compiling the Coq code (which also runs extraction), run:

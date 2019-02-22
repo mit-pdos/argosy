@@ -78,7 +78,7 @@
     },
     {
       "type": "file",
-      "source": "../30.tar.gz",
+      "source": "../argosy-artifact.tgz",
       "destination": "/tmp/argosy-artifact.tar.gz"
     },
     {

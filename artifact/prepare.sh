@@ -4,6 +4,7 @@
 
 src="$1"
 out="/tmp/argosy-artifact"
+out_dir="$PWD"
 
 if [ -z "$src" ]; then
   echo "Usage: $0 <path to argosy src>"
@@ -22,9 +23,16 @@ pushd "$out"
 tar -xf argosy.tar.gz
 rm argosy.tar.gz
 
+# package up the rest of the artifact
 cp "$src/artifact/README.html" ./
 cp "$src/artifact/loc.sh" ./
 popd
 find "$out" -type f -name '._*' -delete
-tar -czvf "30.tar.gz" -C $(dirname "$out") $(basename "$out")
+
+# Note that the uploaded artifact needs to be a zip file because HotCRP
+# doesn't preserve the tar part of the filename for compressed tarballs.
+pushd "$out/.."
+rm -f "$out_dir/argosy-artifact.zip"
+zip -r "$out_dir/argosy-artifact.zip" $(basename "$out")
+popd
 rm -r "$out"

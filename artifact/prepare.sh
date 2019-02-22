@@ -26,5 +26,5 @@ cp "$src/artifact/README.html" ./
 cp "$src/artifact/loc.sh" ./
 popd
 find "$out" -type f -name '._*' -delete
-tar -czvf "argosy-artifact.tar.gz" -C $(dirname "$out") $(basename "$out")
+tar -czvf "30.tar.gz" -C $(dirname "$out") $(basename "$out")
 rm -r "$out"

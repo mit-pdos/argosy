@@ -90,7 +90,7 @@
     },
     {
       "type": "file",
-      "source": "../argosy-artifact.tar.gz",
+      "source": "../30.tar.gz",
       "destination": "/tmp/argosy-artifact.tar.gz"
     },
     {

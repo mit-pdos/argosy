@@ -2,7 +2,14 @@
 title: "Argosy: Verifying layered storage systems with recovery refinement"
 ---
 
-# Kicking the tires
+[![Build Status](https://travis-ci.org/mit-pdos/argosy.svg?branch=master)](https://travis-ci.org/mit-pdos/argosy)
+[![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
+
+The code is licensed under the MIT license.
+
+This artifact is licensed under the Creative Commons Attribution license.
+
+# Getting started
 
 ## Installing dependencies
 
@@ -14,10 +21,13 @@ There are three ways to build Argosy:
 
 To compile from source, you'll need Coq (v8.8.2, v8.9, or master) to compile the
 main development and Haskell stack to build and run the logging and replicated
-disk example. We have no external Coq dependencies and stack provides
-reproducible, sandboxed builds. You'll also need `make`.
+disk example. You'll also need `make`. We have no external Coq dependencies
+(dependencies are included as git submodules and use a fixed commit hash) and
+stack provides reproducible, sandboxed builds for the Haskell dependencies.
 
-If you use macOS, you can install these dependencies with `brew install coq haskell-stack`. If you use Arch Linux you can use `sudo pacman -S coq haskell-stack`.
+If you use macOS, you can install these dependencies with `brew install coq
+haskell-stack`. If you use Arch Linux you can use `sudo pacman -S coq
+haskell-stack`.
 
 The Ubuntu versions of both of these dependencies are too old, so you'll need to
 install them manually. The easiest way to install Coq is [through
@@ -26,8 +36,9 @@ with their installer (`wget -qO- https://get.haskellstack.org/ | sh`).
 
 ### Building from source
 
-If you want to compile from the repo instead of this packaged release, you can clone it from
-[github.com/mit-pdos/argosy](https://github.com/mit-pdos/argosy):
+If you want to compile from the repo instead of this packaged release, you can
+clone it from [github.com/mit-pdos/argosy](https://github.com/mit-pdos/argosy),
+keeping in mind to get the submodules:
 
 ```
 git clone --recurse-submodules https://github.com/mit-pdos/argosy
@@ -35,7 +46,9 @@ cd argosy
 git checkout v0.1.0
 ```
 
-Note that we include some dependencies as git submodules.
+Our code is open source; please feel free to share anything in this artifact or
+the codebase (although please point people to GitHub rather than this static
+artifact).
 
 ### Downloading the VM
 
@@ -61,7 +74,8 @@ system, and a list of assumptions. These assumptions are:
 - `Impl.LogHdr_fmt` and `Impl.Descriptor_fmt`, axiomatic code to encode the
   logging data structures.
 
-The whole development should compile in under two minutes and within one GB of RAM (and under a minute with `make -j2`).
+The whole development should compile in under two minutes and within one GB of
+RAM (and under a minute with `make -j2`).
 
 To compile the logging code, run its unit tests, and see a demo of using
 logging-client, after compiling the Coq code (which also runs extraction), run:
@@ -73,6 +87,9 @@ stack test
 ```
 
 # Connections between paper and code
+
+We refer to identifiers by their qualified Coq name; to find `Spec.Proc.proc`
+you'd look in `Spec/Proc.v` for a definition called `proc`.
 
 ## Section 2 (encoding the semantics)
 
@@ -160,16 +177,18 @@ applies `refinement_transitive` to the two layer implementations.
 The logging layer relies on unverified encoders for converting the logging data
 structures to and from blocks. These axioms are then replaced by Haskell
 implementations during extraction, and those implementations have QuickCheck
-tests for the properties we assume in Coq. We do use nats for simplicity in the
-Coq representation, so these encoders will fail at runtime if disk addresses
-overflow a 64-bit integer.
+tests for the properties we assume in Coq (see
+`logging-client/test/LogEncodingSpec.hs` and compare to the correctness property
+in `Examples.Logging.LogEncoding.block_encoder`). We do use nats for simplicity
+in the Coq representation, so these encoders will fail at runtime if disk
+addresses overflow a 64-bit integer.
 
 ## Section 6
 
 The script that produces the lines of code table at L1177 is provided in the
-artifact; run `loc.sh <path to argosy src>` to reproduce these numbers. The LaTeX
-table was manually constructed from the output, which includes more details for
-debugging.
+artifact; run `loc.sh <path to argosy src>` to reproduce these numbers (you'll
+need cloc and sqlite3 for this script). The LaTeX table was manually constructed
+from the output, which includes more details for debugging.
 
 # Source code overview
 
@@ -241,3 +260,13 @@ The `logging-client` subdirectory contains code to extract and
 run the composed logging and replication implementation, which provides a
 transactional API on top of two unreliable disks. See its separate
 `README.md` for details.
+
+# About this artifact
+
+This artifact was prepared by using `argosy/artifact/prepare.sh`, which calls
+`argosy/release.sh` to package up the Argosy source code. The release consists
+of copying the git repo and then deleting things.
+
+The VM was produced by preparing the artifact and then using the packer setup in
+`argosy/artifact/vm` to do an unattended install of Xubuntu and export the
+resulting VM in VirtualBox.

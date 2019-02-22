@@ -41,9 +41,7 @@ clone it from [github.com/mit-pdos/argosy](https://github.com/mit-pdos/argosy),
 keeping in mind to get the submodules:
 
 ```
-git clone --recurse-submodules https://github.com/mit-pdos/argosy
-cd argosy
-git checkout v0.1.0
+git clone -b v0.1.0 --recurse-submodules https://github.com/mit-pdos/argosy
 ```
 
 Our code is open source; please feel free to share anything in this artifact or

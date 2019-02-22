@@ -26,8 +26,10 @@ git -C "$output_dir" clean -fxd
 
 # remove git repo
 find "$output_dir" -name '.git' -exec rm -r {} \;
+rm "$output_dir/.gitmodules"
 find "$output_dir" -name '.gitignore' -exec rm {} \;
 
 # package
+find "$output_dir" -type f -name '._*' -delete
 tar -czvf argosy.tar.gz -C $(dirname "$output_dir") $(basename "$output_dir")
 rm -r "$output_dir"

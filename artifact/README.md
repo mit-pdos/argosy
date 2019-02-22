@@ -52,7 +52,8 @@ artifact).
 
 We also have a VirtualBox VM available at
 <https://www.dropbox.com/s/3p70ee0azbgs7lm/argosy-vm.ova?dl=1>. The VM image is
-2GB.
+2GB. This image is a clean Xubuntu 18.10 installation with the dependencies for
+the artifact pre-installed.
 
 The default settings are 4GB of RAM and 2 vCPUs, but Argosy builds in a couple
 minutes with as little as 1GB of RAM and 1 vCPU. The VM's default user has no

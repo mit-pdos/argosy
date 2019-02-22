@@ -18,6 +18,14 @@ eval $(opam config env)
 opam repo add coq-released https://coq.inria.fr/opam/released/
 opam install -j2 -y coq.8.9.0
 
-# set up artifact
+## set up artifact
+# we do a build first to set up the stack cache
+cd /tmp
+tar -xf /tmp/argosy-artifact.tar.gz
+cd /tmp/argosy-artifact/argosy
+make -j2
+cd logging-client
+stack test
+
 cd ~/
 tar -xf /tmp/argosy-artifact.tar.gz

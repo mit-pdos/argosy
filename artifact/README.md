@@ -4,12 +4,12 @@ title: "Argosy: Verifying layered storage systems with recovery refinement"
 
 # Kicking the tires
 
-There are three ways to use this artifact:
+## Installing dependencies
+
+There are three ways to build Argosy:
 - Compile from this source distribution
 - Compile from a tag in the git repo
 - Compile within a provided Xubuntu virtual machine with dependencies pre-installed
-
-## Installing dependencies
 
 For the first two options, you'll need Coq (v8.8.2, v8.9, or master) to compile the main development and Haskell stack to build and run the logging and replicated disk example. We have no external Coq dependencies and stack provides reproducible, sandboxed builds. You'll also need `make`.
 
@@ -28,6 +28,8 @@ git checkout v0.1.0
 ```
 
 Note that we include some dependencies as git submodules (you can also get them with `git submodule update --init --recursive`).
+
+We also have a VirtualBox VM available at (TODO: upload VM appliance). The default settings are 4GB of RAM and 2 vCPUs, but Argosy builds in a couple minutes with as little as 1GB of RAM and 1 vCPU. The VM's password is `password` and the default account has `sudo` access without a password. A copy of the artifact is in the home folder at `~ubuntu/argosy-artifact`.
 
 ## Compiling
 

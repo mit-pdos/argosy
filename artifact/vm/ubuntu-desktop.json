@@ -1,6 +1,7 @@
 {
   "variables": {
     "name": "argosy-vm",
+    "vm_description": "PLDI 2019 artifact #1",
     "packer_images_output_dir": "/var/tmp/packer-templates-images",
     "cpus": "2",
     "memory": "4096",
@@ -27,8 +28,16 @@
       "ssh_password": "{{ user `ssh_password` }}",
       "ssh_wait_timeout": "60m",
       "headless": "{{ user `headless` }}",
-      "output_directory": "{{ user `name` }}-virtualbox-iso",
-      "shutdown_command": "echo 'password' | sudo -S shutdown -P now",
+      "output_directory": "{{ user `name` }}-ova",
+      "shutdown_command": "sudo shutdown -P now",
+      "export_opts": [
+        "--manifest",
+        "--vsys", "0",
+        "--description", "{{user `vm_description`}}",
+        "--version", "0.1.0"
+      ],
+      "format": "ova",
+      "guest_additions_mode": "disable",
 
       "hard_drive_interface": "sata",
       "disk_size": "{{ user `disk_size` }}",
@@ -93,7 +102,7 @@
     },
     {
       "type": "shell",
-      "execute_command": "echo 'password' | {{ .Vars }} sudo -S -E bash -x '{{ .Path }}'",
+      "execute_command": "{{ .Vars }} sudo -E bash -x '{{ .Path }}'",
       "scripts": [
         "scripts/ubuntu/update.sh",
         "scripts/ubuntu/disable_apt-daily.sh",

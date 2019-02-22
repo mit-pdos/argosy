@@ -4,9 +4,9 @@ set -e
 
 ## install dependencies
 # artifact dependencies
-sudo apt install -y opam cloc sqlite3
+sudo apt-get install -y opam cloc sqlite3
 # conveniences for VM
-sudo apt install -y virtualbox-guest-dkms virtualbox-guest-utils virtualbox-guest-utils vim firefox
+sudo apt-get install -y virtualbox-guest-dkms virtualbox-guest-utils virtualbox-guest-utils vim firefox
 
 # install stack
 wget -qO- https://get.haskellstack.org/ | sh

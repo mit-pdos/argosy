@@ -43,28 +43,16 @@
       "disk_size": "{{ user `disk_size` }}",
       "vboxmanage": [
         [
-          "modifyvm",
-          "{{ .Name }}",
-          "--cpus",
-          "{{ user `cpus` }}"
+          "modifyvm", "{{ .Name }}",
+          "--cpus", "{{ user `cpus` }}"
         ],
         [
-          "modifyvm",
-          "{{ .Name }}",
-          "--memory",
-          "{{ user `memory` }}"
+          "modifyvm", "{{ .Name }}",
+          "--memory", "{{ user `memory` }}"
         ],
         [
-          "modifyvm",
-          "{{ .Name }}",
-          "--vram",
-          "{{ user `vram` }}"
-        ],
-        [
-          "modifyvm",
-          "{{ .Name }}",
-          "--audiocontroller",
-          "hda"
+          "modifyvm", "{{ .Name }}",
+          "--vram", "{{ user `vram` }}"
         ]
       ],
       "boot_wait": "5s",

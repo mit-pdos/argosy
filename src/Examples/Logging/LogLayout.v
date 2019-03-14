@@ -91,6 +91,22 @@ Proof.
   omega.
 Qed.
 
+Lemma one_disk_failure_unfold s s' r :
+  D.one_disk_failure s s' r ->
+  s' = s.
+Proof.
+  inversion 1; auto.
+Qed.
+
+Lemma ODLayer_crash s s' r :
+  D.ODLayer.(crash_step) s s' r ->
+  s' = s.
+Proof.
+  simpl; eauto using one_disk_failure_unfold.
+Qed.
+
+Hint Resolve ODLayer_crash : core.
+
 Ltac match_abs :=
   match goal with
   | [ H: PhyDecode ?d _ |- PhyDecode ?d _ ] => exact H
@@ -104,6 +120,10 @@ Ltac simplify :=
   repeat match goal with
          | _ => match_abs
          | _ => progress propositional
+         | [ H: D.one_disk_failure _ _ _ |- _ ] =>
+           apply one_disk_failure_unfold in H
+         | [ H: D.ODLayer.(sem).(crash_step) _ _ _ |- _ ] =>
+           apply ODLayer_crash in H
          | |- _ /\ _ => split; [ solve [ auto ] | ]
          | |- _ /\ _ => split; [ | solve [ auto ] ]
          | _ => destruct_tuple
@@ -152,7 +172,11 @@ Ltac prim :=
   simpl in *;
   propositional;
   (intuition eauto);
-  propositional.
+  propositional;
+  repeat match goal with
+         | [ H: D.one_disk_failure _ _ _ |- _ ] =>
+           apply one_disk_failure_unfold in H
+         end.
 
 Local Notation proc_hspec := (Hoare.proc_hspec D.ODLayer.(sem)).
 Arguments Hoare.proc_hspec {Op State} sem {T}.
@@ -175,7 +199,7 @@ Proof.
            end;
     propositional;
     auto.
-  destruct (index s' a); simpl; eauto.
+  destruct (index s' a); simpl; finish.
 Qed.
 
 Theorem write_ok a v :
@@ -243,7 +267,7 @@ Proof.
   step.
   inversion H; subst; simpl in *.
   replace (index state 0) in *; simpl in *; subst.
-  rewrite LogHdr_fmt.(encode_decode); auto.
+  rewrite LogHdr_fmt.(encode_decode); eauto.
 Qed.
 
 Local Hint Resolve gethdr_ok : core.
@@ -388,7 +412,7 @@ Proof.
   step.
   inv_clear H; simpl in *.
   replace (index state 1) in *; simpl in *; propositional.
-  rewrite Descriptor_fmt.(encode_decode); auto.
+  rewrite Descriptor_fmt.(encode_decode); eauto.
 Qed.
 
 Local Hint Resolve getdesc_ok : core.
@@ -437,6 +461,7 @@ Proof.
   step.
   step.
   pose proof (PhyDecode_data_len H).
+  intuition eauto.
   omega.
 Qed.
 
@@ -468,6 +493,7 @@ Proof.
   unfold get_logwrite.
   step.
   step.
+  intuition eauto.
   pose proof (PhyDecode_disk_len H).
   f_equal.
   (* BUG: rewrite does not try to instantiate def using the typeclass without

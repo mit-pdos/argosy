@@ -64,8 +64,7 @@ Proof.
            | [ x: Recghost _ |- _ ] => destruct x
            end;
     eauto.
-  - inv_clear H1.
-    eexists (recghost _ _ _); simpl; intuition eauto.
+  - eexists (recghost _ _ _); simpl; intuition eauto.
   - simpl in H0; propositional.
     unfold logical_abstraction.
     descend; intuition eauto.
@@ -162,10 +161,9 @@ Proof.
     propositional.
     descend; intuition eauto.
     destruct ls'; simpl in *; congruence.
-  - inv_clear H1.
-    split_cases;
+  - split_cases;
       lazymatch goal with
-      | [ H: PhyDecode state'' ?ps,
+      | [ H: PhyDecode state' ?ps,
              H': LogDecode ?ps ?ls |- _ ] =>
         unshelve eexists (recghost ps ls _); simpl; eauto
       end.
@@ -204,8 +202,7 @@ Proof.
            | [ x: Recghost _ |- _ ] => destruct x
            end;
     eauto.
-  - inv_clear H1.
-    eexists (recghost _ _ _); simpl; intuition eauto.
+  - eexists (recghost _ _ _); simpl; intuition eauto.
   - simpl in H0; propositional.
     unfold logical_abstraction.
     descend; intuition eauto.
@@ -247,10 +244,9 @@ Proof.
   - unfold logical_abstraction in *; simplify; intuition eauto.
   - eauto.
   - simpl; unfold logical_abstraction in *; simplify; intuition eauto.
-  - inv_clear H1.
-    simpl in *; propositional.
+  - simpl in *; propositional.
     lazymatch goal with
-    | [ H: PhyDecode state'' ?ps,
+    | [ H: PhyDecode state' ?ps,
            H': LogDecode ?ps ?ls |- _ ] =>
       unshelve eexists (recghost ps ls _); simpl; eauto
     end.

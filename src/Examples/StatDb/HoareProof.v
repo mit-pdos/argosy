@@ -25,7 +25,7 @@ Definition add_hspec n : Specification unit unit Var.State :=
       pre := True;
       post := fun state' (_:unit) => fst state' = (n + fst state) /\
                                      snd state' =  S (snd state);
-      alternate := fun state' (_:unit) => True
+      alternate := fun state' (_:unit) => state' = (0, 0)
     |}.
 
 Definition add_rspec n : Specification unit unit Var.State :=
@@ -42,7 +42,7 @@ Definition avg_hspec : Specification nat unit Var.State :=
     {|
       pre := True;
       post := fun state' v => state = state' /\ v = (fst state / snd state');
-      alternate := fun state' v => True
+      alternate := fun state' v => state' = (0, 0)
     |}.
 
 Definition avg_rspec : Specification nat unit Var.State :=
@@ -63,12 +63,12 @@ Definition recover_spec : Specification unit unit Var.State :=
 
 Lemma read_op_ok :
   forall i,
-    proc_hspec Var.dynamics (read i) (op_spec Var.dynamics (Var.Read i)).
+    proc_hspec Var.dynamics (read i) (op_cstep_spec Var.dynamics (Var.Read i)).
 Proof. intros. eapply op_spec_sound. Qed.
 
 Lemma write_op_ok :
   forall i v,
-    proc_hspec Var.dynamics (write i v) (op_spec Var.dynamics (Var.Write i v)).
+    proc_hspec Var.dynamics (write i v) (op_cstep_spec Var.dynamics (Var.Write i v)).
 Proof. intros. eapply op_spec_sound. Qed.
 
 Hint Resolve read_op_ok write_op_ok : core.
@@ -97,7 +97,7 @@ Lemma recover_cok : proc_hspec Var.dynamics (impl.(recover)) recover_spec.
 Proof. simpl. eapply ret_hspec; firstorder. Qed.
 
 Lemma recover_idempotent :
-  idempotent_crash_step Var.dynamics (fun (t: unit) => recover_spec).
+  idempotent_crash_step (fun (t: unit) => recover_spec).
 Proof.
   unfold idempotent_crash_step; intuition; exists tt; simpl in *.
   unfold puts in *; firstorder; congruence.
@@ -112,13 +112,99 @@ Lemma init_cok :
   proc_hspec Var.dynamics (impl.(init)) (init_hspec).
 Proof. eapply ret_hspec; firstorder. Qed.
 
+Lemma util_and3 (P Q R:Prop) :
+  P -> Q -> R -> P /\ Q /\ R.
+Proof. firstorder. Qed.
+
+Ltac extract_pre H :=
+  let P := type of H in
+  match eval hnf in P with
+  | True => clear H
+  | ?v = _ =>
+    is_var v;
+    hnf in H; subst
+  | (?v = _) /\ _ =>
+    is_var v;
+    hnf in H;
+    let Heq := fresh "Heq" in
+    destruct H as (Heq&H); subst
+  | _ => idtac
+  end.
+
+Lemma crash_step_simp s s' r :
+  Var.dynamics.(crash_step) s s' r ->
+  s' = (0, 0).
+Proof.
+  compute; auto.
+Qed.
+
+Lemma op_step_crash T (op: Var.Op T) u s' r :
+  (op_cstep_spec Var.dynamics op u).(alternate) s' r ->
+  s' = (0, 0).
+Proof.
+  intros.
+  hnf in H; propositional.
+  destruct H0; propositional.
+Qed.
+
+Ltac extract_crash H :=
+  lazymatch type of H with
+  | Var.dynamics.(crash_step) _ _ _ =>
+    apply crash_step_simp in H; subst
+  | (op_cstep_spec Var.dynamics _ _).(alternate) _ _ =>
+    apply op_step_crash in H; subst
+  | _ => idtac
+  end.
+
+Ltac extract_post :=
+  lazymatch goal with
+  | |- pre _ => simpl
+  | |- alternate _ _ _ => simpl
+  | |- post _ _ _ => simpl
+  | _ => idtac
+  end.
+
+Ltac step_bind :=
+  eapply proc_hspec_rx; [ solve [ eauto ] | cbn [pre post alternate] .. ];
+  (let H := fresh "Hpre" in
+   intros * H; extract_pre H);
+  apply util_and3;
+  swap 1 2;
+  [ intros
+  | extract_post
+  | let H := fresh "Hcrash" in
+    intros * H; extract_crash H;
+    extract_post ].
+
+Ltac step_ret :=
+  apply ret_hspec; cbn [pre post alternate];
+  (let H := fresh "Hpre" in
+   intros * H; extract_pre H);
+  apply conj;
+  [ extract_post
+  | let H := fresh "Hcrash" in
+    intros * H; extract_crash H; extract_post ].
+
+Ltac newstep :=
+  monad_simpl;
+  lazymatch goal with
+  | |- proc_hspec _ (compile_op _ _) _ => simpl
+  | |- proc_hspec _ (Ret _) _ => step_ret
+  | |- proc_hspec _ (Bind _ _) _ => step_bind
+  end.
+
 Lemma add_cok n :
   proc_hspec Var.dynamics (impl.(compile_op) (DB.Add n)) (add_hspec n).
-Proof. repeat step. Qed.
+Proof.
+  repeat newstep; auto.
+  destruct state0; simpl; auto.
+Qed.
 
 Lemma avg_cok :
   proc_hspec Var.dynamics (impl.(compile_op) (DB.Avg)) (avg_hspec).
-Proof. repeat step. Qed.
+Proof.
+  repeat newstep; auto.
+Qed.
 
 Lemma add_ok n :
   proc_rspec Var.dynamics (impl.(compile_op) (DB.Add n)) impl.(recover) (add_rspec n).

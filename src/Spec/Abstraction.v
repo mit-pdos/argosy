@@ -1,7 +1,6 @@
 From Tactical Require Import Propositional.
 
 Require Import Spec.Proc.
-Require Import Spec.Hoare.
 
 Require Import Helpers.RelationAlgebra.
 Require Import Helpers.RelationRewriting.
@@ -46,23 +45,6 @@ Section Abstraction.
     refines p spec.
   Proof. eapply refine_unfolded_iff. Qed.
 
-  (* define refinement as transforming an abstract specification to a concrete
-  one (a program satisfying the abstract spec should satisfy the concrete spec
-  after refinement-preserving compilation) *)
-  Definition refine_spec
-             A T R
-             (spec: A -> Specification T R AState)
-    : (AState*A) -> Specification T R CState :=
-    fun '(s, a) cs =>
-      {| pre := absr s cs tt /\
-                (spec a s).(pre);
-         post := fun cs' r =>
-                   exists s', absr s' cs' tt /\
-                         (spec a s).(post) s' r;
-         alternate := fun cs' r =>
-                        exists s', absr s' cs' tt /\
-                              (spec a s).(alternate) s' r; |}.
-
   Section Dynamics.
     Context C_Op (c_sem: Dynamics C_Op CState).
     Notation c_proc := (proc C_Op).
@@ -93,7 +75,7 @@ Proof.
   rewrite H0; norm.
 Qed.
 
-Theorem refines_trans_bind State1 State2 abs T1 T2
+Theorem refines_respects_bind State1 State2 abs T1 T2
         (r1: relation State1 State1 T1)
         (r2: T1 -> relation State1 State1 T2)
         (r1': relation State2 State2 T1)
@@ -108,7 +90,7 @@ Proof.
   setoid_rewrite H0; norm.
 Qed.
 
-Theorem refines_trans_unit State1 State2 abs T2
+Theorem refines_respects_bind_unit State1 State2 abs T2
         (r1: relation State1 State1 unit)
         (r2: unit -> relation State1 State1 T2)
         (r1': relation State2 State2 unit)
@@ -118,21 +100,21 @@ Theorem refines_trans_unit State1 State2 abs T2
   refines abs (and_then r1 r2) (and_then r1' r2').
 Proof.
   intros.
-  apply refines_trans_bind; auto.
+  apply refines_respects_bind; auto.
   destruct v; auto.
 Qed.
 
-Theorem refines_trans State1 State2 abs T
+Theorem refines_respects_seq State1 State2 abs T
         (r1 r2: relation State1 State1 T)
         (r1' r2': relation State2 State2 T) :
   refines abs r1 r1' ->
   refines abs r2 r2' ->
   refines abs (r1;; r2) (r1';; r2').
 Proof.
-  auto using refines_trans_bind.
+  auto using refines_respects_bind.
 Qed.
 
-Theorem refines_star State1 State2 abs T
+Theorem refines_respects_star State1 State2 abs T
         (r1: relation State1 State1 T)
         (r2: relation State2 State2 T) :
   refines abs r1 r2 ->
@@ -142,7 +124,7 @@ Proof.
   rew simulation_seq_value; auto.
 Qed.
 
-Theorem refines_or State1 State2 abs T
+Theorem refines_respects_or State1 State2 abs T
         (r1 r1': relation State1 State1 T)
         (r2 r2': relation State2 State2 T) :
   refines abs r1 r2 ->

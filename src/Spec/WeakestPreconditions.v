@@ -10,7 +10,8 @@ Section Dynamics.
   Notation proc := (proc Op).
   Notation step := sem.(step).
   Notation exec := sem.(exec).
-  Notation exec_halt := sem.(exec_halt).
+  Notation crash_step := sem.(crash_step).
+  Notation exec_crash := sem.(exec_crash).
 
   Definition precondition T := forall (post: T -> State -> Prop), State -> Prop.
 
@@ -52,13 +53,30 @@ Section Dynamics.
   Qed.
 
   Definition crashpre := forall (crash: State -> Prop), State -> Prop.
+  Definition after_crash (crash: State -> Prop) : State -> Prop :=
+    fun s => forall s', crash_step s s' tt -> crash s'.
+
+  Theorem after_crash_unfold : forall crash s,
+      after_crash crash s ->
+      forall s' u,
+        crash_step s s' u ->
+        crash s'.
+  Proof.
+    destruct u; firstorder.
+  Qed.
+
+  Ltac after_crash :=
+    try match goal with
+        | [ H: after_crash ?crash _ |- _ ] =>
+          eauto using (@after_crash_unfold crash _ H)
+        end.
 
   Fixpoint crashcond T (p: proc T) : crashpre :=
     fun crash s =>
       match p with
-      | Ret v => crash s
-      | Call op => crash s /\
-                  wp.(op_wp) op (fun v s => crash s) s
+      | Ret v => after_crash crash s
+      | Call op => after_crash crash s /\
+                  wp.(op_wp) op (fun v s => after_crash crash s) s
       | Bind p rx =>
         (* crashing at s is handled by wp_crash p (inductively; the other two
  rules includes this *)
@@ -68,19 +86,20 @@ Section Dynamics.
 
   Theorem wp_crash_ok T (p: proc T) (crash: State -> Prop) :
     forall s, crashcond p crash s ->
-         forall s' v, exec_halt p s s' v ->
+         forall s' v, exec_crash p s s' v ->
                  crash s'.
   Proof.
-    induction p; cleanup; eauto.
+    induction p; cleanup; after_crash.
     - repeat match goal with
-             | [ H: _ \/ _ |- _ ] => destruct H; propositional; eauto
+             | [ H: _ \/ _ |- _ ] => destruct H; propositional;
+                                    after_crash
              end.
-      eapply wp.(op_wp_ok) in H1; eauto; cleanup.
+      eapply wp.(op_wp_ok) in H1; eauto; after_crash.
     - repeat match goal with
-             | [ H: _ \/ _ |- _ ] => destruct H; propositional; eauto
+             | [ H: _ \/ _ |- _ ] => destruct H; propositional;
+                                    after_crash
              end.
       + eapply IHp; eauto.
-        apply exec_halt_noop; cleanup; eauto.
       + eapply wp_ok in H2; eauto.
   Qed.
 

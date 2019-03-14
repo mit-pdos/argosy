@@ -110,6 +110,7 @@ Module ReplicatedDisk.
            | [ u: unit |- _ ] => destruct u
            | |- _ /\ _ => split; [ solve [auto] | ]
            | |- _ /\ _ => split; [ | solve [auto] ]
+           | [ H: identity _ _ _ |- _ ] => apply identity_unfold in H
            | |- list block => shelve
            | |- disk => shelve
            | |- disk*(disk -> Prop) => evar_tuple d F
@@ -907,20 +908,21 @@ Module ReplicatedDisk.
       * unshelve (step).
         exact (assign d a b). exact (OutOfSync a b). simplify; finish.
         step.
+        intuition simplify.
       * unshelve (step).
         exact (assign d a b). exact (FullySynced). simplify; finish.
         step.
   Qed.
 
   Theorem Recover_spec_idempotent_crash_step1 d :
-    idempotent_crash_step (TDBaseDynamics) (fun (t : unit) => Recover_spec d (FullySynced)).
+    idempotent_crash_step (fun (t : unit) => Recover_spec d (FullySynced)).
   Proof.
     unfold idempotent_crash_step; intuition; simplify.
     exists tt; finish.
   Qed.
 
   Theorem Recover_spec_idempotent_crash_step2 d a b :
-    idempotent_crash_step (TDBaseDynamics)
+    idempotent_crash_step
                           (fun rp : rec_prot =>
                              match rp with
                              | prot_sync1 => Recover_spec d (FullySynced)
@@ -957,7 +959,7 @@ Module ReplicatedDisk.
     - intros []. eapply Recover_rok1.
     - descend; simplify; intuition eauto.
     - descend; simplify; intuition eauto.
-      exists tt. inversion H1. subst; intuition eauto.
+      exists tt. subst; intuition eauto.
     - simplify. exists d; split; eauto.
   Qed.
 
@@ -999,7 +1001,7 @@ Module ReplicatedDisk.
     - intros. eapply Recover_rok1.
     - descend; simplify; intuition eauto.
     - descend; simplify; intuition eauto.
-      exists tt. inv_clear H1. intuition eauto.
+      exists tt. intuition eauto.
     - simplify. exists d; split; eauto.
   Qed.
 
@@ -1051,7 +1053,7 @@ Module ReplicatedDisk.
     eapply proc_hspec_to_rspec; eauto using Recover_spec_idempotent_crash_step1.
     { eapply Recover_rok1. }
     { intros []. eapply Recover_rok1. }
-    { simplify. exists tt. inv_clear H1; eauto. }
+    { simplify. exists tt. eauto. }
     { simplify. }
   Qed.
 
@@ -1060,7 +1062,7 @@ Module ReplicatedDisk.
   Proof.
     unfold recovery_refines_crash_step.
     eapply proc_rspec_recovery_refines_crash_step; [ eapply Recover_noop|..];
-      unfold rd_abstraction; simplify; inversion H0; subst; finish.
+      unfold rd_abstraction; simplify; subst; finish.
   Qed.
 
   Lemma Refinement_TD_OD: LayerRefinement TDLayer D.ODLayer.

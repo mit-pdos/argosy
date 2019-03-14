@@ -14,17 +14,17 @@ Section specs.
      We use these exclusively in this file to prove higher level specs below. *)
   Lemma read_op_ok :
     forall i a,
-      proc_hspec TDBaseDynamics (td.read i a) (op_spec TDBaseDynamics (op_read i a)).
+      proc_hspec TDBaseDynamics (td.read i a) (op_cstep_spec TDBaseDynamics (op_read i a)).
   Proof. intros. eapply op_spec_sound. Qed.
 
   Lemma write_op_ok :
     forall i a b,
-      proc_hspec TDBaseDynamics (td.write i a b) (op_spec TDBaseDynamics (op_write i a b)).
+      proc_hspec TDBaseDynamics (td.write i a b) (op_cstep_spec TDBaseDynamics (op_write i a b)).
   Proof. intros. eapply op_spec_sound. Qed.
 
   Lemma size_op_ok :
     forall i,
-      proc_hspec TDBaseDynamics (td.size i) (op_spec TDBaseDynamics (op_size i)).
+      proc_hspec TDBaseDynamics (td.size i) (op_cstep_spec TDBaseDynamics (op_size i)).
   Proof. intros. eapply op_spec_sound. Qed.
 
   Hint Resolve read_op_ok : core.
@@ -131,11 +131,19 @@ Section specs.
     destruct i; inv_bg; simpl in *; eauto.
   Qed.
 
+  Lemma identity_unfold S (s s': S) T (v: T) :
+      identity s s' v ->
+      s' = s.
+  Proof.
+    unfold identity; auto.
+  Qed.
+
   Ltac cleanup :=
     repeat match goal with
            | [ |- forall _, _ ] => intros
            | |- _ /\ _ => split; [ solve [ eauto || congruence ] | ]
            | |- _ /\ _ => split; [ | solve [ eauto || congruence ] ]
+           | [ H: identity _ _ _ |- _ ] => apply identity_unfold in H
            | [ H: Working _ = Working _ |- _ ] => inversion H; subst; clear H
            | [ H: bg_failure _ _ _ |- _ ] =>
              eapply maybe_holds_stable in H;

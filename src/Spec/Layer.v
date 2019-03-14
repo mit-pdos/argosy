@@ -134,19 +134,15 @@ Section Layers.
   Theorem rexec_rec R (rec: a_proc R):
     refines rf.(absr)
                  (c_sem.(rexec) (compile rec) recover)
-                 (a_sem.(exec_halt) rec;; a_sem.(crash_step)).
+                 (a_sem.(exec_crash) rec).
   Proof.
     unfold refines, rexec.
     induction rec; simpl; norm.
     - pose unfolded (rf.(compile_op_ok) op)
            (fun H => red in H; unfold rexec, refines in H).
       rew H0.
-      Split.
-      Left.
-      Right.
     - rew crash_step_refinement.
-    - repeat Split; [ Left; Left | Left; Right | Right ].
-      + rew crash_step_refinement.
+    - Split; [ Left | Right ].
       + rew IHrec.
       + left_assoc rew (compile_exec_ok rec).
         rew H.
@@ -200,14 +196,10 @@ Section Layers.
       rew bind_star_unit.
 
       rew rexec_star_rec.
-      rewrite ?bind_dist_r; norm.
     - rew recover_ret.
-    - repeat Split;
-        [ Left; Left | Left; Right | Right ].
-      + rew recover_ret.
+    - Split; [ Left | Right ].
       + rew IHp.
       + left_assoc rew compile_exec_ok.
-        rel_congruence.
         rew H.
   Qed.
 

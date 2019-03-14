@@ -33,17 +33,6 @@ Definition spec_impl
             (forall s' rv, (spec1 s).(alternate) s' rv ->
                            (spec2 s).(alternate) s' rv).
 
-Definition op_spec `(sem: Dynamics Op State) `(op : Op T) : Specification T unit State :=
-  fun state =>
-    {|
-      pre := True;
-      post :=
-        fun state' v => sem.(step) op state state' v;
-      alternate :=
-        fun state' r =>
-          r = tt /\ (state' = state \/ exists v, sem.(step) op state state' v);
-    |}.
-
 Definition op_cstep_spec `(sem: Dynamics Op State) `(op : Op T) : Specification T unit State :=
   fun state =>
     {|
@@ -61,7 +50,7 @@ Section Hoare.
   Context `(sem: Dynamics Op State).
   Notation proc := (proc Op).
   Notation exec := sem.(exec).
-  Notation exec_halt := sem.(exec_halt).
+  Notation exec_crash := sem.(exec_crash).
   Notation crash_step := sem.(crash_step).
   Notation rexec := sem.(rexec).
 
@@ -75,7 +64,7 @@ Section Hoare.
              (p: proc T)
              (spec: Specification T unit State) :=
     exec p ---> spec_exec spec /\
-    exec_halt p ---> spec_aexec spec.
+    exec_crash p ---> spec_aexec spec.
 
   Theorem proc_rspec_expand T R
           (p: proc T) (rec: proc R)
@@ -102,7 +91,7 @@ Section Hoare.
       (spec s).(pre) ->
       (forall s' v, exec p s s' v ->
                (spec s).(post) s' v) /\
-      (forall s' rv, exec_halt p s s' rv ->
+      (forall s' rv, exec_crash p s s' rv ->
                 (spec s).(alternate) s' rv).
   Proof.
     unfold proc_hspec, rimpl, spec_exec, spec_aexec; split; intros.
@@ -185,7 +174,7 @@ Section Hoare.
       specialize (Hok t). rewrite proc_rspec_expand in Hok.
       destruct (Hok state_mid) as (Hrx_ok&Hrx_rec); simpl; eauto.
     - rewrite rexec_unfold. rewrite rexec_unfold in Hp_rec.
-      simpl. rewrite exec_halt_idem, bind_dist_r.
+      simpl. rewrite bind_dist_r.
       apply rel_or_elim.
       + rewrite Hp_rec; auto.
         intros state state' r Hspec_aexec Hpre'.
@@ -225,7 +214,7 @@ Section Hoare.
       specialize (Hrx _ Hpre') as (Hpre&Hok&Hrec).
       specialize (Hok t). rewrite proc_hspec_expand in Hok.
       destruct (Hok state_mid) as (Hrx_ok&Hrx_rec); simpl; eauto.
-    - simpl. rewrite exec_halt_idem.
+    - simpl.
       apply rel_or_elim.
       + rewrite Hp_rec; auto.
         intros state state' r Hspec_aexec Hpre'.
@@ -294,12 +283,14 @@ Section Hoare.
           (v:T):
     (forall state, pre (spec state) ->
                      post (spec state) state v /\
-                     alternate (spec state) state tt) ->
+                     (forall state', crash_step state state' tt -> alternate (spec state) state' tt)) ->
     proc_hspec (Ret v) spec .
   Proof.
-    unfold proc_hspec; intros Himpl; split;
-    intros state state' t Hexec Hpre;
-    inversion Hexec; subst; specialize (Himpl _ Hpre); intuition.
+    unfold proc_hspec, spec_exec, spec_aexec; simpl.
+    unfold "--->", pure; split; propositional.
+    specialize (H _ H1); propositional.
+    specialize (H _ H1); propositional.
+    destruct o; eauto.
   Qed.
 
   (** Define what it means for a spec to be idempotent: *)
@@ -319,11 +310,10 @@ Section Hoare.
   Definition idempotent_crash_step A T R `(spec: A -> Specification T R State) :=
     forall a state,
       pre (spec a state) ->
-      forall v state' state'', alternate (spec a state) state' v ->
-                               crash_step state' state'' tt ->
-               exists a', pre (spec a' state'') /\
-                    forall rv state''', post (spec a' state'') state''' rv ->
-                                  post (spec a state) state''' rv.
+      forall v state', alternate (spec a state) state' v ->
+               exists a', pre (spec a' state') /\
+                    forall rv state'', post (spec a' state') state'' rv ->
+                                  post (spec a state) state'' rv.
 
   (** In some situations, the precondition of a specification
     may define variables or facts that you want to [intros].
@@ -371,21 +361,20 @@ Section Hoare.
   Qed.
 
   Theorem op_spec_sound T (op: Op T):
-    proc_hspec (Call op) (op_spec sem op).
+    proc_hspec (Call op) (op_cstep_spec sem op).
   Proof.
     unfold proc_hspec; split.
     - intros state state' t Hexec Hpre; eauto.
     - simpl. apply rel_or_elim.
       * intros s s' [] Hl Hpre. simpl. split; auto.
-        firstorder.
       * intros s s' [] Hl Hpre.
-        inversion Hl as (?&?&?&Hrest). inversion Hrest; subst.
+        inversion Hl as (?&?&?&Hrest).
         firstorder.
   Qed.
 
   Theorem op_spec_complete T (op: Op T):
-    spec_exec (op_spec sem op) ---> exec (Call op) /\
-    spec_aexec (op_spec sem op) ---> exec_halt (Call op).
+    spec_exec (op_cstep_spec sem op) ---> exec (Call op) /\
+    spec_aexec (op_cstep_spec sem op) ---> exec_crash (Call op).
   Proof. split; firstorder. Qed.
 
   Theorem op_cstep_spec_complete1 T (op: Op T):
@@ -420,12 +409,11 @@ Section Hoare.
     (forall s, (p_rspec s).(pre) -> (p_hspec s).(pre) /\
                (forall s' v, (p_hspec s).(post) s' v ->
                              (p_rspec s).(post) s' v)) ->
-    (* alternate of hspec followed by crash implies pre of rec for some ghost*)
-    (forall state state' state'' v,
+    (* alternate of hspec implies pre of rec for some ghost*)
+    (forall state state' v,
         pre (p_hspec state) ->
         alternate (p_hspec state) state' v ->
-        crash_step state' state'' tt ->
-        exists a, pre (rec_hspec a state'')) ->
+        exists a, pre (rec_hspec a state')) ->
     (* recovery post implies alternate of rspec *)
     (forall a s sc, (p_rspec s).(pre) ->
                     (forall sfin rv, (rec_hspec a sc).(post) sfin rv ->
@@ -447,13 +435,12 @@ Section Hoare.
       intros s1 [].
 
       setoid_rewrite <-bind_assoc.
-      assert (_ <- test (fun s' : State => (p_hspec s1).(pre) /\ (p_hspec s1).(alternate) s' tt); crash_step
+      assert (test (fun s' : State => (p_hspec s1).(pre) /\ (p_hspec s1).(alternate) s' tt)
               ---> @any _ _ unit ;; test (fun s' : State => exists a', (rec_hspec a' s').(pre)))
         as HCI.
       {
-        intros s s' [] ([]&?&(((Hpre&Halt)&?)&Hcrash)); subst.
-        unfold any; exists tt; eexists; split; auto.
-        split; eauto.
+        unfold test, rimpl, any; propositional.
+        exists tt; eexists; intuition eauto.
       }
       rew HCI.
 
@@ -468,10 +455,9 @@ Section Hoare.
         subst. eapply Hr_alt; eauto.
         eapply Hc; eauto.
       * intros s s' [] Hl.
-        destruct Hl as ([]&?&((a'&Hhspec)&<-)&Hexec_halt).
+        destruct Hl as ([]&?&((a'&Hhspec)&<-)&Hexec_crash).
         unfold any; exists tt; eexists; split; auto.
         split; [| eauto].
-        destruct Hexec_halt as ([]&smid&Hexec_halt&Hcrash_step).
         edestruct Hidemp as (a''&?); eauto.
         eapply Hc; eauto. eexists; intuition eauto.
       * apply any_seq_star_any.

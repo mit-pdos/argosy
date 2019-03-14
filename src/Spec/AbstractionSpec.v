@@ -138,8 +138,7 @@ Section Abstraction.
     - eapply Hexec in Hrec.
       edestruct (Hpost_crash sA sC sCmid' sC') as (sA'&Habsr'&Hcrash'); eauto.
       exists tt, sA'; firstorder.
-    - destruct H as ([]&?&?&?).
-      unshelve (especialize (Haexec sCmid sC' tt)).
+    - unshelve (especialize (Haexec sCmid sC' tt)).
       { repeat (eexists _, _; split; eauto). }
       edestruct (Hpost_crash sA sC) as (sA'&Habsr'&Hcrash'); eauto.
       exists tt, sA'; firstorder.

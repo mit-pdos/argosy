@@ -599,15 +599,13 @@ Arguments recghost {restrict}.
 
 Theorem log_apply_spec_idempotent_crash_step :
   idempotent_crash_step
-    D.ODLayer.(sem)
                 (fun '(ps, ls) => log_apply_spec ps ls ls.(ls_disk) ls.(ls_committed)).
 Proof.
   unfold idempotent_crash_step; intuition eauto; simplify.
-  inv_clear H1.
   simpl in H0; propositional.
   destruct_with_eqn (b.(ls_committed)); split_cases;
     match goal with
-    | [ H: PhyDecode state'' ?ps',
+    | [ H: PhyDecode state' ?ps',
            H': LogDecode ?ps' ?ls' |- _ ] =>
       exists (ps', ls')
     end;
@@ -618,7 +616,6 @@ Qed.
 
 Theorem log_apply_spec_idempotent_crash_step' ls0 :
   idempotent_crash_step
-    D.ODLayer.(sem)
                 (fun (a: Recghost (fun ls =>
                                    if ls.(ls_committed) then
                                      massign ls.(ls_log) ls.(ls_disk) =
@@ -629,12 +626,11 @@ Theorem log_apply_spec_idempotent_crash_step' ls0 :
                    log_apply_spec ps ls ls.(ls_disk) ls.(ls_committed)).
 Proof.
   unfold idempotent_crash_step; intuition eauto; simplify.
-  inv_clear H1.
   destruct a.
   simpl in *; propositional.
   destruct_with_eqn (ls.(ls_committed)); split_cases;
     lazymatch goal with
-    | [ H: PhyDecode state'' ?ps',
+    | [ H: PhyDecode state' ?ps',
            H': LogDecode ?ps' ?ls' |- _ ] =>
       unshelve eexists (recghost ps' ls' _)
     end; simpl; simplify; finish.
@@ -642,13 +638,11 @@ Qed.
 
 Theorem log_apply_spec_idempotent_crash_step_notxn' ls0 :
   idempotent_crash_step
-    D.ODLayer.(sem)
                 (fun (a: Recghost (fun ls => ls.(ls_disk) = ls0.(ls_disk))) =>
                    let 'recghost ps ls _ := a in
                    log_apply_spec ps ls ls.(ls_disk) false).
 Proof.
   unfold idempotent_crash_step; intuition eauto; simplify.
-  inv_clear H1.
   destruct a.
   simpl in H0; propositional.
   destruct_with_eqn (ls.(ls_committed)); split_cases;

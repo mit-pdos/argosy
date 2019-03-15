@@ -81,14 +81,14 @@ Section Abstraction.
     (forall sA sC, absr sA sC tt -> proc_rspec c_sem p rec (refine_spec spec sA)) ->
     (forall sA sC, absr sA sC tt -> (spec sA).(pre)) ->
     (forall sA sC sA' v, absr sA' sC tt -> (spec sA).(post) sA' v
-                         -> (op_cstep_spec a_sem op sA).(post) sA' v) ->
+                         -> (op_spec a_sem op sA).(post) sA' v) ->
     (forall sA sC sA' v, absr sA sC tt -> (spec sA).(alternate) sA' v
-                         -> (op_cstep_spec a_sem op sA).(alternate) sA' v) ->
+                         -> (op_spec a_sem op sA).(alternate) sA' v) ->
     crash_refines absr c_sem p rec (a_sem.(step) op)
                   (a_sem.(crash_step) + (a_sem.(step) op;; a_sem.(crash_step))).
   Proof.
     intros Hprspec Hpre Hpost Halt. unfold crash_refines, refines; split.
-    - setoid_rewrite <-op_cstep_spec_complete1.
+    - setoid_rewrite <-op_spec_complete1.
       unfold spec_exec.
       intros sA sC' t Hl.
       destruct Hl as ([]&sC&?&Hexec).
@@ -98,7 +98,7 @@ Section Abstraction.
       exists t, sA'; split; auto.
       * intros Hpre'. eapply Hpost; eauto.
       * exists tt, sC'; firstorder.
-    - setoid_rewrite <-op_cstep_spec_complete2.
+    - setoid_rewrite <-op_spec_complete2.
       unfold spec_aexec.
       intros sA sC' [] Hl.
       destruct Hl as ([]&sC&?&Hexec).

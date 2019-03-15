@@ -33,7 +33,7 @@ Definition spec_impl
             (forall s' rv, (spec1 s).(alternate) s' rv ->
                            (spec2 s).(alternate) s' rv).
 
-Definition op_cstep_spec `(sem: Dynamics Op State) `(op : Op T) : Specification T unit State :=
+Definition op_spec `(sem: Dynamics Op State) `(op : Op T) : Specification T unit State :=
   fun state =>
     {|
       pre := True;
@@ -295,19 +295,6 @@ Section Hoare.
 
   (** Define what it means for a spec to be idempotent: *)
   Definition idempotent A T R `(spec: A -> Specification T R State) :=
-    forall a state, pre (spec a state) ->
-      forall v state', alternate (spec a state) state' v -> 
-              (** idempotency: alternate condition implies precondition to
-                 re-run on every crash *)
-              exists a', pre (spec a' state') /\
-                    (** postcondition transitivity: establishing the
-                       postcondition from a alternate state is sufficient to
-                       establish it with respect to the original initial
-                       state (note all with the same ghost state) *)
-                    forall rv state'', post (spec a' state') state'' rv ->
-                                  post (spec a state) state'' rv.
-
-  Definition idempotent_crash_step A T R `(spec: A -> Specification T R State) :=
     forall a state,
       pre (spec a state) ->
       forall v state', alternate (spec a state) state' v ->
@@ -361,7 +348,7 @@ Section Hoare.
   Qed.
 
   Theorem op_spec_sound T (op: Op T):
-    proc_hspec (Call op) (op_cstep_spec sem op).
+    proc_hspec (Call op) (op_spec sem op).
   Proof.
     unfold proc_hspec; split.
     - intros state state' t Hexec Hpre; eauto.
@@ -373,16 +360,16 @@ Section Hoare.
   Qed.
 
   Theorem op_spec_complete T (op: Op T):
-    spec_exec (op_cstep_spec sem op) ---> exec (Call op) /\
-    spec_aexec (op_cstep_spec sem op) ---> exec_crash (Call op).
+    spec_exec (op_spec sem op) ---> exec (Call op) /\
+    spec_aexec (op_spec sem op) ---> exec_crash (Call op).
   Proof. split; firstorder. Qed.
 
-  Theorem op_cstep_spec_complete1 T (op: Op T):
-    spec_exec (op_cstep_spec sem op) ---> exec (Call op).
+  Theorem op_spec_complete1 T (op: Op T):
+    spec_exec (op_spec sem op) ---> exec (Call op).
   Proof. firstorder. Qed.
 
-  Theorem op_cstep_spec_complete2 T (op: Op T):
-    spec_aexec (op_cstep_spec sem op) ---> crash_step + (sem.(step) op;; crash_step).
+  Theorem op_spec_complete2 T (op: Op T):
+    spec_aexec (op_spec sem op) ---> crash_step + (sem.(step) op;; crash_step).
   Proof. firstorder. Qed.
 
   Lemma spec_aexec_cancel T R1 R2 (spec1 : Specification T R1 State)
@@ -405,7 +392,7 @@ Section Hoare.
           `(p: proc T) `(rec: proc R):
     proc_hspec p p_hspec ->
     (forall a, proc_hspec rec (rec_hspec a)) ->
-    idempotent_crash_step rec_hspec ->
+    idempotent rec_hspec ->
     (forall s, (p_rspec s).(pre) -> (p_hspec s).(pre) /\
                (forall s' v, (p_hspec s).(post) s' v ->
                              (p_rspec s).(post) s' v)) ->
@@ -421,7 +408,7 @@ Section Hoare.
     proc_rspec p rec p_rspec.
   Proof.
     intros (Hpe&Hpc) Hc.
-    unfold idempotent_crash_step. intros Hidemp.
+    unfold idempotent. intros Hidemp.
     intros Himpl1 Hc_crash_r Hr_alt.
     split.
     - rew Hpe; auto.

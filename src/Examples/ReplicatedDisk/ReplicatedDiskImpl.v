@@ -914,30 +914,30 @@ Module ReplicatedDisk.
         step.
   Qed.
 
-  Theorem Recover_spec_idempotent_crash_step1 d :
-    idempotent_crash_step (fun (t : unit) => Recover_spec d (FullySynced)).
+  Theorem Recover_spec_idempotent1 d :
+    idempotent (fun (t : unit) => Recover_spec d (FullySynced)).
   Proof.
-    unfold idempotent_crash_step; intuition; simplify.
+    unfold idempotent; intuition; simplify.
     exists tt; finish.
   Qed.
 
-  Theorem Recover_spec_idempotent_crash_step2 d a b :
-    idempotent_crash_step
-                          (fun rp : rec_prot =>
-                             match rp with
-                             | prot_sync1 => Recover_spec d (FullySynced)
-                             | prot_out => Recover_spec d (OutOfSync a b)
-                             | prot_sync2 => Recover_spec (assign d a b) (FullySynced)
-                             end).
+  Theorem Recover_spec_idempotent2 d a b :
+    idempotent
+      (fun rp : rec_prot =>
+         match rp with
+         | prot_sync1 => Recover_spec d (FullySynced)
+         | prot_out => Recover_spec d (OutOfSync a b)
+         | prot_sync2 => Recover_spec (assign d a b) (FullySynced)
+         end).
   Proof.
-    unfold idempotent_crash_step; intuition; simplify.
+    unfold idempotent; intuition; simplify.
     unfold identity in *; subst.
     destruct a0.
     - exists prot_sync1; simplify; finish.
     - destruct H0; [| destruct H0].
-        ** exists (prot_sync1); simplify; finish.
-        ** exists (prot_out); simplify; finish.
-        ** exists (prot_sync2); simplify; finish.
+      ** exists (prot_sync1); simplify; finish.
+      ** exists (prot_out); simplify; finish.
+      ** exists (prot_sync2); simplify; finish.
     - exists prot_sync2; simplify; finish.
   Qed.
 
@@ -954,7 +954,7 @@ Module ReplicatedDisk.
                            (refine_spec rd_abstraction (OneDiskAPI.read_spec a) d).
   Proof.
     intros a d.
-    eapply proc_hspec_to_rspec; eauto using Recover_spec_idempotent_crash_step1;
+    eapply proc_hspec_to_rspec; eauto using Recover_spec_idempotent1;
       unfold refine_spec, rd_abstraction in *.
     - intros []. eapply Recover_rok1.
     - descend; simplify; intuition eauto.
@@ -968,7 +968,7 @@ Module ReplicatedDisk.
                              (refine_spec rd_abstraction (OneDiskAPI.write_spec a b) d).
   Proof.
     intros a b d.
-    eapply proc_hspec_to_rspec; eauto using Recover_spec_idempotent_crash_step2;
+    eapply proc_hspec_to_rspec; eauto using Recover_spec_idempotent2;
       unfold refine_spec, rd_abstraction in *.
     - intros. eapply Recover_rok2.
     - descend; simplify; intuition eauto.
@@ -996,7 +996,7 @@ Module ReplicatedDisk.
                          (refine_spec rd_abstraction (OneDiskAPI.size_spec) d).
   Proof.
     intros d.
-    eapply proc_hspec_to_rspec; eauto using Recover_spec_idempotent_crash_step1;
+    eapply proc_hspec_to_rspec; eauto using Recover_spec_idempotent1;
       unfold refine_spec, rd_abstraction in *.
     - intros. eapply Recover_rok1.
     - descend; simplify; intuition eauto.
@@ -1050,7 +1050,7 @@ Module ReplicatedDisk.
       (Recover)
       (Recover_spec d (FullySynced)).
   Proof.
-    eapply proc_hspec_to_rspec; eauto using Recover_spec_idempotent_crash_step1.
+    eapply proc_hspec_to_rspec; eauto using Recover_spec_idempotent1.
     { eapply Recover_rok1. }
     { intros []. eapply Recover_rok1. }
     { simplify. exists tt. eauto. }

@@ -14,8 +14,8 @@ Definition logical_abstraction (d: D.State) ps ls :=
   ls.(ls_committed) = false.
 
 Local Hint Resolve recovery_ok : core.
-Local Hint Resolve log_apply_spec_idempotent_crash_step_notxn' : core.
-Local Hint Resolve log_apply_spec_idempotent_crash_step' : core.
+Local Hint Resolve log_apply_spec_idempotent_notxn' : core.
+Local Hint Resolve log_apply_spec_idempotent' : core.
 
 Definition general_rspec ls0 T (p_hspec: Specification T unit D.State) :=
   proc_hspec_to_rspec

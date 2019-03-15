@@ -63,12 +63,12 @@ Definition recover_spec : Specification unit unit Var.State :=
 
 Lemma read_op_ok :
   forall i,
-    proc_hspec Var.dynamics (read i) (op_cstep_spec Var.dynamics (Var.Read i)).
+    proc_hspec Var.dynamics (read i) (op_spec Var.dynamics (Var.Read i)).
 Proof. intros. eapply op_spec_sound. Qed.
 
 Lemma write_op_ok :
   forall i v,
-    proc_hspec Var.dynamics (write i v) (op_cstep_spec Var.dynamics (Var.Write i v)).
+    proc_hspec Var.dynamics (write i v) (op_spec Var.dynamics (Var.Write i v)).
 Proof. intros. eapply op_spec_sound. Qed.
 
 Hint Resolve read_op_ok write_op_ok : core.
@@ -97,9 +97,9 @@ Lemma recover_cok : proc_hspec Var.dynamics (impl.(recover)) recover_spec.
 Proof. simpl. eapply ret_hspec; firstorder. Qed.
 
 Lemma recover_idempotent :
-  idempotent_crash_step (fun (t: unit) => recover_spec).
+  idempotent (fun (t: unit) => recover_spec).
 Proof.
-  unfold idempotent_crash_step; intuition; exists tt; simpl in *.
+  unfold idempotent; intuition; exists tt; simpl in *.
   unfold puts in *; firstorder; congruence.
 Qed.
 
@@ -139,7 +139,7 @@ Proof.
 Qed.
 
 Lemma op_step_crash T (op: Var.Op T) u s' r :
-  (op_cstep_spec Var.dynamics op u).(alternate) s' r ->
+  (op_spec Var.dynamics op u).(alternate) s' r ->
   s' = (0, 0).
 Proof.
   intros.
@@ -151,7 +151,7 @@ Ltac extract_crash H :=
   lazymatch type of H with
   | Var.dynamics.(crash_step) _ _ _ =>
     apply crash_step_simp in H; subst
-  | (op_cstep_spec Var.dynamics _ _).(alternate) _ _ =>
+  | (op_spec Var.dynamics _ _).(alternate) _ _ =>
     apply op_step_crash in H; subst
   | _ => idtac
   end.

@@ -9,9 +9,9 @@ Section Dynamics.
   Context `(sem: Dynamics Op State).
   Notation proc := (proc Op).
   Notation step := sem.(step).
-  Notation exec := sem.(exec).
+  Notation exec := (exec sem).
   Notation crash_step := sem.(crash_step).
-  Notation exec_crash := sem.(exec_crash).
+  Notation exec_crash := (exec_crash sem).
 
   Definition precondition T := forall (post: T -> State -> Prop), State -> Prop.
 

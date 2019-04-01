@@ -41,18 +41,18 @@ Definition op_spec `(sem: Dynamics Op State) `(op : Op T) : Specification T unit
         fun state' v => sem.(step) op state state' v;
       alternate :=
         fun state' r =>
-          r = tt /\ (sem.(crash_step) state state' r
+          r = tt /\ (crash_step sem state state' r
                      \/ exists smid v, sem.(step) op state smid v
-                                       /\ sem.(crash_step) smid state' r);
+                                       /\ crash_step sem smid state' r);
     |}.
 
 Section Hoare.
   Context `(sem: Dynamics Op State).
   Notation proc := (proc Op).
-  Notation exec := sem.(exec).
-  Notation exec_crash := sem.(exec_crash).
+  Notation exec := (exec sem).
+  Notation exec_crash := (exec_crash sem).
   Notation crash_step := sem.(crash_step).
-  Notation rexec := sem.(rexec).
+  Notation rexec := (rexec sem).
 
   Definition proc_rspec T R
              (p: proc T) (rec: proc R)

@@ -34,13 +34,13 @@ Fixpoint compile_seq Op C_Op `(impl: LayerImpl C_Op Op) R (p: proc_seq Op R) :
   proc_seq C_Op R :=
   match p with
   | Seq_Nil => Seq_Nil
-  | Seq_Bind p p' => Seq_Bind (impl.(compile) p) (fun v => impl.(compile_seq) (p' v))
+  | Seq_Bind p p' => Seq_Bind (compile impl p) (fun v => impl.(compile_seq) (p' v))
   end.
 
 Definition compile_rec Op C_Op
            `(impl: LayerImpl C_Op Op)
            R (rec: proc Op R) : proc C_Op R :=
-  Bind impl.(recover) (fun _ => impl.(compile) rec).
+  Bind impl.(recover) (fun _ => compile impl rec).
 
 Definition initOutput {A} `(L: Layer Op) (r: relation (State L) (State L) A) (v : A) : Prop :=
   exists s1 s2, L.(initP) s1 /\ r s1 s2 v.
@@ -54,9 +54,9 @@ Section Layers.
   Notation c_proc := (proc C_Op).
   Notation c_initP := c_layer.(initP).
   Notation c_sem := c_layer.(sem).
-  Notation c_exec := c_layer.(sem).(exec).
-  Notation c_exec_recover := c_layer.(sem).(exec_recover).
-  Notation c_output := c_layer.(initOutput).
+  Notation c_exec := (exec c_layer.(sem)).
+  Notation c_exec_recover := (exec_recover c_layer.(sem)).
+  Notation c_output := (initOutput c_layer).
 
   Context Op (a_layer: Layer Op).
   Notation AState := a_layer.(State).
@@ -64,8 +64,8 @@ Section Layers.
   Notation a_proc_seq := (proc_seq Op).
   Notation a_initP := a_layer.(initP).
   Notation a_sem := a_layer.(sem).
-  Notation a_exec_recover := a_layer.(sem).(exec_recover).
-  Notation a_output := a_layer.(initOutput).
+  Notation a_exec_recover := (exec_recover a_layer.(sem)).
+  Notation a_output := (initOutput a_layer).
 
   Definition compile_op_refines_step (impl: LayerImpl C_Op Op) (absr: relation AState CState unit) :=
     forall T (op: Op T),
@@ -97,10 +97,10 @@ Section Layers.
 
   Context (rf: LayerRefinement).
   Notation compile_op := rf.(impl).(compile_op).
-  Notation compile_rec := rf.(impl).(compile_rec).
-  Notation compile_seq := rf.(impl).(compile_seq).
-  Notation compile := rf.(impl).(compile).
-  Notation recover := rf.(impl).(recover).
+  Notation compile_rec := (compile_rec rf.(impl)).
+  Notation compile_seq := (compile_seq rf.(impl)).
+  Notation compile := (compile rf.(impl)).
+  Notation recover := (recover rf.(impl)).
 
   (* need to mark things opaque since [setoid_rewrite] simplifies the goal
    (and we need [setoid_rewrite] to rewrite under bind binders) *)
@@ -110,7 +110,7 @@ Section Layers.
       refines
         rf.(absr)
              (c_exec (compile p))
-             (a_sem.(exec) p).
+             (exec a_sem p).
   Proof.
     induction p; simpl; intros.
     - pose unfolded (rf.(compile_op_ok) op)
@@ -133,8 +133,8 @@ Section Layers.
 
   Theorem rexec_rec R (rec: a_proc R):
     refines rf.(absr)
-                 (c_sem.(rexec) (compile rec) recover)
-                 (a_sem.(exec_crash) rec).
+                 (rexec c_sem (compile rec) recover)
+                 (exec_crash a_sem rec).
   Proof.
     unfold refines, rexec.
     induction rec; simpl; norm.
@@ -222,8 +222,8 @@ Section Layers.
         crash_refines
           rf.(absr) c_sem
                     (compile p) (compile_rec rec)
-                    (a_sem.(exec) p)
-                    (a_sem.(rexec) p rec).
+                    (exec a_sem p)
+                    (rexec a_sem p rec).
   Proof.
     intros.
     split; [ now apply compile_exec_ok | now apply compile_rexec_ok ].
@@ -237,7 +237,7 @@ Section Layers.
 
   Theorem complete_exec_ok : forall T (p: a_proc T),
       test c_initP;; inited <- c_exec rf.(impl).(init); ifInit inited (c_exec (compile p)) --->
-           (any (T:=unit);; test a_initP;; v <- a_sem.(exec) p; any (T:=unit);; pure (Some v)) +
+           (any (T:=unit);; test a_initP;; v <- exec a_sem p; any (T:=unit);; pure (Some v)) +
       (any (T:=unit);; pure None).
   Proof.
     intros.
@@ -255,8 +255,8 @@ Section Layers.
   Qed.
 
   Theorem complete_rexec_ok : forall T (p: a_proc T) R (rec: a_proc R),
-      test c_initP;; inited <- c_exec rf.(impl).(init); ifInit inited (c_sem.(rexec) (compile p) (compile_rec rec)) --->
-           (any (T:=unit);; test a_initP;; v <- a_sem.(rexec) p rec; any (T:=unit);; pure (Some v)) +
+      test c_initP;; inited <- c_exec rf.(impl).(init); ifInit inited (rexec c_sem (compile p) (compile_rec rec)) --->
+           (any (T:=unit);; test a_initP;; v <- rexec a_sem p rec; any (T:=unit);; pure (Some v)) +
       (any (T:=unit);; pure None).
   Proof.
     intros.
@@ -274,8 +274,8 @@ Section Layers.
   Qed.
 
   Theorem complete_exec_seq_ok_tests : forall R (p: a_proc_seq R) (rec: a_proc R),
-      test c_initP;; inited <- c_exec rf.(impl).(init); ifInit inited (c_sem.(exec_seq) (compile_seq p) (compile_rec rec)) --->
-           (any (T:=unit);; test a_initP;; v <- a_sem.(exec_seq) p rec; any (T:=unit);; pure (Some v)) +
+      test c_initP;; inited <- c_exec rf.(impl).(init); ifInit inited (exec_seq c_sem (compile_seq p) (compile_rec rec)) --->
+           (any (T:=unit);; test a_initP;; v <- exec_seq a_sem p rec; any (T:=unit);; pure (Some v)) +
       (any (T:=unit);; pure None).
   Proof.
     intros.
@@ -300,11 +300,11 @@ Section Layers.
      match inited with
      | InitFailed => pure None
      | Initialized =>
-       v <- c_sem.(exec_seq) (compile_seq p) (compile_rec rec); pure (Some v)
+       v <- exec_seq c_sem (compile_seq p) (compile_rec rec); pure (Some v)
      end) cs1 cs2 mv ->
     match mv with
     | None => True
-    | Some v => exists as1 as2, a_initP as1 /\ (a_sem.(exec_seq) p rec) as1 as2 v
+    | Some v => exists as1 as2, a_initP as1 /\ (exec_seq a_sem p rec) as1 as2 v
     end.
   Proof.
     intros.
@@ -326,9 +326,9 @@ Section Layers.
                 match inited with
                 | InitFailed => pure None
                 | Initialized =>
-                  v <- c_sem.(exec_seq) (compile_seq p) (compile_rec rec); pure (Some v)
+                  v <- exec_seq c_sem (compile_seq p) (compile_rec rec); pure (Some v)
                 end) (Some v) ->
-    a_output (a_sem.(exec_seq) p rec) v.
+    a_output (exec_seq a_sem p rec) v.
   Proof.
     unfold c_output, a_output. intros (s1&s2&?&?).
     eapply (complete_exec_seq_ok_unfolded) with (mv := Some v); eauto.
@@ -346,14 +346,14 @@ Definition layer_impl_compose
   : LayerImpl Op1 Op3.
 Proof.
   refine {| compile_op T op :=
-              impl1.(compile) (impl2.(compile_op) op);
+              compile impl1 (impl2.(compile_op) op);
             recover := Bind impl1.(recover)
                                     (fun (_:unit) =>
-                                       impl1.(compile) impl2.(recover));
+                                       compile impl1 impl2.(recover));
             init := Bind impl1.(init)
                                  (fun inited =>
                                     if inited
-                                    then impl1.(compile) impl2.(init)
+                                    then compile impl1 impl2.(init)
                                     else Ret InitFailed);
          |}.
 Defined.
@@ -368,12 +368,12 @@ Proof.
   intros Op1 l1 Op2 l2 Op3 l3 rf1 rf2.
   red; unfold layer_impl_compose; simpl.
   split; simpl; unfold refines; norm.
-  - rew rf1.(compile_exec_ok).
-    pose unfolded (rf2.(compile_op_ok) _ op)
+  - rew (compile_exec_ok rf1).
+    pose unfolded (compile_op_ok rf2 _ op)
          (fun H => hnf in H).
     left_assoc rew H.
-  - rew rf1.(compile_rexec_ok).
-    pose unfolded (rf2.(compile_op_ok) _ op)
+  - rew (compile_rexec_ok rf1).
+    pose unfolded (compile_op_ok rf2 _ op)
          (fun H => hnf in H).
     left_assoc rew H0.
 Qed.
@@ -389,13 +389,13 @@ Proof.
   red; unfold refines, layer_impl_compose; simpl; norm.
   rew @exec_recover_bind.
   rew bind_star_unit.
-  pose unfolded rf1.(crash_step_refinement)
-                      (fun H => unfold refines in H).
+  pose unfolded (crash_step_refinement rf1)
+       (fun H => unfold refines in H).
   setoid_rewrite <- bind_assoc at 3.
   setoid_rewrite <- bind_assoc at 2.
   rew H.
-  rew rf1.(rexec_star_rec).
-  left_assoc rew rf2.(crash_step_refinement).
+  rew (rexec_star_rec rf1).
+  left_assoc rew (crash_step_refinement rf2).
 Qed.
 
 Lemma compile_init_ok:
@@ -414,7 +414,7 @@ Proof.
   rewrite <- bind_assoc.
   rew rf1.(init_ok).
   Split.
-  - rew rf1.(compile_exec_ok).
+  - rew (compile_exec_ok rf1).
     setoid_rewrite <- bind_assoc at 2.
     rew rf2.(init_ok).
     repeat (setoid_rewrite bind_dist_r ||

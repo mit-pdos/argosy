@@ -10,9 +10,9 @@ Require Import Examples.ReplicatedDisk.ReplicatedDiskImpl.
 Module LoggingTwoDiskRefinement.
   Definition rf : LayerRefinement TwoDisk.TDLayer TxnD.l :=
     refinement_transitive ReplicatedDisk.Refinement_TD_OD LoggingRefinement.rf.
-  Check rf.(compile_exec_seq_ok).
+  Check (compile_exec_seq_ok rf).
   Print Assumptions rf.
-  Definition compile := rf.(compile).
-  Definition init := rf.(init).
-  Definition recover := rf.(recover).
+  Definition compile := (compile rf).
+  Definition init := (init rf).
+  Definition recover := (recover rf).
 End LoggingTwoDiskRefinement.

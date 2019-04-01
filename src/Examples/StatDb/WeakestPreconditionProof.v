@@ -29,7 +29,7 @@ Proof.
             Layer.absr := absr; |}.
   - red; intros.
     split.
-    + eapply (wp.(wp_refine)); intros.
+    + eapply (wp_refine wp); intros.
       destruct s as [sum' count'].
       unfold absr in H; simpl in *; propositional.
       destruct op; simpl.

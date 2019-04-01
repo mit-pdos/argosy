@@ -13,10 +13,10 @@ Section Dynamics.
   Notation proc := (proc Op).
   Notation step := sem.(step).
   Notation crash_step := sem.(crash_step).
-  Notation exec_crash := sem.(exec_crash).
-  Notation exec := sem.(exec).
-  Notation exec_recover := sem.(exec_recover).
-  Notation rexec := sem.(rexec).
+  Notation exec_crash := (exec_crash sem).
+  Notation exec := (exec sem).
+  Notation exec_recover := (exec_recover sem).
+  Notation rexec := (rexec sem).
 
   Hint Resolve rimpl_refl requiv_refl : core.
 

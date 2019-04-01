@@ -48,8 +48,8 @@ Section Abstraction.
   Section Dynamics.
     Context C_Op (c_sem: Dynamics C_Op CState).
     Notation c_proc := (proc C_Op).
-    Notation c_exec := c_sem.(exec).
-    Notation c_rexec := c_sem.(rexec).
+    Notation c_exec := (exec c_sem).
+    Notation c_rexec := (rexec c_sem).
 
     Definition crash_refines T R
                (p: c_proc T) (rec: c_proc R)

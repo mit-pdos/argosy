@@ -87,10 +87,8 @@ stack test
 
 # Connections between paper and code
 
-This artifact was written against the submission version of the paper, which we
-include for archival purposes in the artifact as `argosy-submission.pdf`. We
-refer to identifiers by their qualified Coq name; to find `Spec.Proc.proc` you'd
-look in `Spec/Proc.v` for a definition called `proc`.
+We refer to identifiers by their qualified Coq name; to find `Spec.Proc.proc`
+you'd look in `Spec/Proc.v` for a definition called `proc`.
 
 ## Section 2 (encoding the semantics)
 
@@ -266,8 +264,7 @@ transactional API on top of two unreliable disks. See its separate
 
 This artifact was prepared by using `argosy/artifact/prepare.sh`, which calls
 `argosy/release.sh` to package up the Argosy source code. The release consists
-of copying the git repo and then deleting things, followed by adding the
-submission version of the paper.
+of copying the git repo and then deleting things.
 
 The VM was produced by preparing the artifact and then using the packer setup in
 `argosy/artifact/vm` to do an unattended install of Xubuntu and export the

@@ -3,7 +3,6 @@
 ## Put together artifact tarball
 
 src="$1"
-submission_pdf="$2"
 out="/tmp/argosy-artifact"
 out_dir="$PWD"
 
@@ -27,7 +26,6 @@ rm argosy.tar.gz
 # package up the rest of the artifact
 cp "$src/artifact/README.html" ./
 cp "$src/artifact/loc.sh" ./
-cp "$submission_pdf" ./argosy-submission.pdf
 popd
 find "$out" -type f -name '._*' -delete
 

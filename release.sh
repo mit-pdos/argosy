@@ -25,11 +25,11 @@ make -C "$output_dir" clean
 git -C "$output_dir" clean -fxd
 
 # remove git repo
-find "$output_dir" -name '.git' -exec rm -r {} \;
+rm -rf $(find "$output_dir" -name '.git')
 rm "$output_dir/.gitmodules"
 find "$output_dir" -name '.gitignore' -exec rm {} \;
 
 # package
 find "$output_dir" -type f -name '._*' -delete
-tar -czvf argosy.tar.gz -C $(dirname "$output_dir") $(basename "$output_dir")
+tar -czvf argosy.tar.gz -C "$(dirname "$output_dir")" "$(basename "$output_dir")"
 rm -r "$output_dir"

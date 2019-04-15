@@ -160,7 +160,7 @@ you'd look in `Spec/Proc.v` for a definition called `proc`.
 
 For a simple illustration of the framework, we recommend reading
 `Examples/StatDb/Impl.v` followed by `Examples.StatDb/HoareProof.v`. The
-abstract layer as two operations: `add(n:nat)` to store in the database and
+abstract layer has two operations: `add(n:nat)` to store in the database and
 `avg() : Op nat` to get the average of the numbers added so far. These two
 operations are implemented using two variables, one for the number of elements
 and the other for the running sum. The database is cleared on a crash, so there

@@ -9,9 +9,6 @@ import           Control.Monad.Reader           ( reader
                                                 , liftIO
                                                 )
 import qualified Data.ByteString               as BS
-import           Disk
-import           Proc
-import           Replication.TwoDiskEnvironment
 import           System.Directory               ( doesFileExist )
 import           System.IO                      ( SeekMode(..)
                                                 , IOMode(WriteMode)
@@ -20,7 +17,12 @@ import           System.IO                      ( SeekMode(..)
                                                 )
 import "unix-bytestring" System.Posix.IO.ByteString
 import           System.Posix.Types             ( Fd )
-import           TwoDiskAPI
+import           Unsafe.Coerce
+
+import           Disk
+import           Proc                    hiding ( unsafeCoerce )
+import           Replication.TwoDiskEnvironment
+import           TwoDiskAPI              hiding ( unsafeCoerce )
 import           Utils.Conversion
 
 type DiskResult = TwoDisk__DiskResult
@@ -66,9 +68,8 @@ interpretOp (TwoDisk__Coq_op_write d a b) = unsafeCoerce <$> write d a b
 interpretOp (TwoDisk__Coq_op_size d     ) = unsafeCoerce <$> size d
 
 interpret :: Coq_proc (TwoDisk__Op x) a -> Proc a
-interpret (Call op   ) = unsafeCoerce <$> interpretOp op
-interpret (Ret  v    ) = return v
-interpret (Bind p1 p2) = interpret p1 >>= interpret . p2
+interpret (Ret v   ) = return v
+interpret (Do op rx) = unsafeCoerce <$> interpretOp op >>= interpret . rx
 
 init :: FilePath -> FilePath -> Integer -> IO Env
 init fn0 fn1 sizeBytes = do

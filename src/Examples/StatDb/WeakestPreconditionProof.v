@@ -23,6 +23,8 @@ Proof.
   destruct v; eauto.
 Defined.
 
+Local Transparent Bind.
+
 Definition rf : LayerRefinement Var.l DB.l.
 Proof.
   refine {| Layer.impl := impl;

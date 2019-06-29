@@ -46,6 +46,8 @@ Definition op_spec `(sem: Dynamics Op State) `(op : Op T) : Specification T unit
                                        /\ crash_step sem smid state' r);
     |}.
 
+Global Opaque Bind.
+
 Section Hoare.
   Context `(sem: Dynamics Op State).
   Notation proc := (proc Op).

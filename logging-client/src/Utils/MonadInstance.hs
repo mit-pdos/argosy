@@ -1,8 +1,8 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Utils.MonadInstance where
 
-import Proc
-import Unsafe.Coerce
+import           Proc
+import           Unsafe.Coerce
 
 instance Functor (Coq_proc op) where
   fmap f p = Bind (unsafeCoerce p) (Ret . f . unsafeCoerce)

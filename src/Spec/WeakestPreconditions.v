@@ -34,9 +34,7 @@ Section Dynamics.
     fun post =>
       match p with
       | Ret v => post v
-      | Call op => wp.(op_wp) op post
-      | Bind p rx =>
-        precond p (fun v s' => precond (rx v) post s')
+      | Do op rx => wp.(op_wp) op (fun v s' => precond (rx v) post s')
       end.
 
   Theorem wp_ok :
@@ -47,9 +45,8 @@ Section Dynamics.
   Proof.
     intros Hop_wp.
     induction p; cleanup; eauto.
-    - eapply wp.(op_wp_ok) in H; eauto.
-    - eapply IHp in H1; eauto; cleanup.
-      eapply H in H1; eauto.
+    - eapply wp.(op_wp_ok) in H0; eauto.
+      eapply H; eauto.
   Qed.
 
   Definition crashpre := forall (crash: State -> Prop), State -> Prop.
@@ -75,13 +72,9 @@ Section Dynamics.
     fun crash s =>
       match p with
       | Ret v => after_crash crash s
-      | Call op => after_crash crash s /\
-                  wp.(op_wp) op (fun v s => after_crash crash s) s
-      | Bind p rx =>
-        (* crashing at s is handled by wp_crash p (inductively; the other two
- rules includes this *)
-        crashcond p crash s /\
-        precond p (fun v s' => crashcond (rx v) crash s') s
+      | Do op rx =>
+        after_crash crash s /\
+        wp.(op_wp) op (fun v s' => crashcond (rx v) crash s') s
       end.
 
   Theorem wp_crash_ok T (p: proc T) (crash: State -> Prop) :
@@ -90,17 +83,15 @@ Section Dynamics.
                  crash s'.
   Proof.
     induction p; cleanup; after_crash.
-    - repeat match goal with
-             | [ H: _ \/ _ |- _ ] => destruct H; propositional;
-                                    after_crash
-             end.
-      eapply wp.(op_wp_ok) in H1; eauto; after_crash.
-    - repeat match goal with
-             | [ H: _ \/ _ |- _ ] => destruct H; propositional;
-                                    after_crash
-             end.
-      + eapply IHp; eauto.
-      + eapply wp_ok in H2; eauto.
+
+    repeat match goal with
+           | [ H: _ \/ _ |- _ ] =>
+             destruct H; propositional;
+            after_crash
+           end.
+
+    eapply H; eauto.
+    eapply wp.(op_wp_ok) in H2; eauto.
   Qed.
 
 End Dynamics.

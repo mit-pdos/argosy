@@ -1,7 +1,10 @@
-Require Import Setoid.
-Require Import Morphisms.
-Require Import Proc.
+From Coq Require Import Setoid Morphisms.
+From Coq Require Import FunctionalExtensionality.
+
 From Classes Require Import Classes.
+
+Require Import Proc.
+
 Require Import Helpers.RelationAlgebra.
 Require Import Helpers.RelationRewriting.
 Require Import Tactical.ProofAutomation.
@@ -24,8 +27,6 @@ Section Dynamics.
     exec p;; crash_step ---> exec_crash p.
   Proof.
     induction p; simpl in *; norm.
-    - rewrite <- rel_or_intror.
-      reflexivity.
     - setoid_rewrite H.
       rewrite <- rel_or_intror.
       eauto.
@@ -35,9 +36,7 @@ Section Dynamics.
     crash_step ---> exec_crash p.
   Proof.
     induction p; simpl in *; norm.
-    - Left.
-    - Left.
-      auto.
+    Left; auto.
   Qed.
 
   Theorem exec_crash_ret T (v: T) :
@@ -97,8 +96,18 @@ Section Dynamics.
   Theorem monad_left_id T T' (p: T' -> proc T) v :
       Bind (Ret v) p <==> p v.
   Proof.
-    split; simpl; norm.
-    rew exec_crash_idem.
+    reflexivity.
+  Qed.
+
+  Theorem monad_assoc_eq
+          `(p1: proc T1)
+          `(p2: T1 -> proc T2)
+          `(p3: T2 -> proc T3) :
+    Bind (Bind p1 p2) p3 = Bind p1 (fun v => Bind (p2 v) p3).
+  Proof.
+    induct p1; simpl; auto.
+    f_equal.
+    extensionality v; congruence.
   Qed.
 
   Theorem monad_assoc
@@ -107,9 +116,33 @@ Section Dynamics.
           `(p3: T2 -> proc T3) :
     Bind (Bind p1 p2) p3 <==> Bind p1 (fun v => Bind (p2 v) p3).
   Proof.
-    split; simpl; norm.
-    repeat setoid_rewrite bind_dist_l.
-    norm.
+    rewrite monad_assoc_eq; reflexivity.
+  Qed.
+
+  Theorem exec_call T (op: Op T) :
+    exec (Call op) <---> step op.
+  Proof.
+    simpl.
+    rew bind_right_id.
+  Qed.
+
+  Theorem exec_bind T1 T2 (p1 : proc T1) (p2 : T1 -> proc T2) :
+    exec (Bind p1 p2) <---> v <- exec p1; exec (p2 v).
+  Proof.
+    induct p1; simpl; norm.
+    setoid_rewrite H; reflexivity.
+  Qed.
+
+  Theorem exec_crash_bind T1 T2 (p1 : proc T1) (p2 : T1 -> proc T2) :
+    exec_crash (Bind p1 p2) <--->
+               exec_crash p1 + (v <- exec p1; exec_crash (p2 v)).
+  Proof.
+    induct p1; simpl; norm.
+    - rewrite exec_crash_idem.
+      auto.
+    - setoid_rewrite H.
+      repeat setoid_rewrite bind_dist_l.
+      norm.
   Qed.
 
   Theorem exec_recover_bind
@@ -122,7 +155,8 @@ Section Dynamics.
   Proof.
     repeat unfold exec_recover, rexec; simpl; norm.
 
-    rewrite ?bind_dist_r; norm.
+    setoid_rewrite exec_crash_bind;
+      setoid_rewrite exec_bind.
 
     (* a few abstractions *)
     gen (exec rec1) (exec_crash rec1) crash_step;
@@ -168,6 +202,9 @@ Section Dynamics.
 
 End Dynamics.
 
+Arguments exec_call [Op State sem T].
+Arguments exec_bind [Op State sem T1 T2].
+Arguments exec_crash_bind [Op State sem T1 T2].
 Arguments exec_crash_noop [Op State sem T].
 Arguments exec_crash_finish [Op State sem T].
 Arguments exec_crash_ret [Op State sem T].

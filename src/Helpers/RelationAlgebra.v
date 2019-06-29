@@ -700,7 +700,7 @@ Section OutputRelations.
     specialize (IHseq_star _ ltac:(eauto)); t.
   Qed.
 
-  Theorem seq_unit_sliding A (p: relation A A unit) (q: relation A A unit) :
+  Theorem seq_unit_sliding_1 A (p: relation A A unit) (q: relation A A unit) :
     p;; seq_star (q;; p) --->
      seq_star (p;; q);; p.
   Proof.
@@ -708,6 +708,15 @@ Section OutputRelations.
     gen x.
     induction H0; t.
     specialize (IHseq_star _ ltac:(eauto)); t.
+  Qed.
+
+  Theorem seq_unit_sliding A (p: relation A A unit) (q: relation A A unit) :
+    seq_star (p;; q);; p <--->
+             p;; seq_star (q;; p).
+  Proof.
+    apply rimpl_to_requiv.
+    - apply seq_sliding.
+    - apply seq_unit_sliding_1.
   Qed.
 
   Theorem seq_plus_precise A T1 (p: relation A A T1) (q: relation A A unit) :

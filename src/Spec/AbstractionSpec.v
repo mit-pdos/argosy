@@ -1,4 +1,5 @@
 Require Import Spec.Proc.
+Require Import Spec.ProcTheorems.
 Require Import Spec.Hoare.
 
 Require Import Helpers.RelationAlgebra.
@@ -72,7 +73,8 @@ Section Abstraction.
                   (a_sem.(crash_step) + (a_sem.(step) op;; a_sem.(crash_step))).
   Proof.
     intros ?? He Ha. unfold crash_refines, refines. split.
-    - setoid_rewrite <-He. eapply proc_rspec_refine_exec; eauto.
+    - rewrite exec_call in He.
+      setoid_rewrite <-He. eapply proc_rspec_refine_exec; eauto.
     - setoid_rewrite <-Ha. eapply proc_rspec_refine_rec; eauto.
   Qed.
 
@@ -88,7 +90,8 @@ Section Abstraction.
                   (a_sem.(crash_step) + (a_sem.(step) op;; a_sem.(crash_step))).
   Proof.
     intros Hprspec Hpre Hpost Halt. unfold crash_refines, refines; split.
-    - setoid_rewrite <-op_spec_complete1.
+    - rewrite <- exec_call.
+      setoid_rewrite <-op_spec_complete1.
       unfold spec_exec.
       intros sA sC' t Hl.
       destruct Hl as ([]&sC&?&Hexec).

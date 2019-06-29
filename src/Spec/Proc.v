@@ -11,11 +11,19 @@ Import RelationNotations.
 
 (** Syntax: free monad over a type family of operations *)
 Inductive proc (Op: Type -> Type) (T : Type) : Type :=
-| Call (op : Op T)
 | Ret (v : T)
-| Bind (T1 : Type) (p1 : proc Op T1) (p2 : T1 -> proc Op T).
-Arguments Call {Op T}.
+| Do T1 (op : Op T1) (rx : T1 -> proc Op T).
+
 Arguments Ret {Op T} v.
+
+Definition Call {Op T} (op : Op T) : proc Op T :=
+  Do op (fun v => Ret v).
+
+Fixpoint Bind Op T T1 (p1 : proc Op T1) (p2 : T1 -> proc Op T) : proc Op T :=
+  match p1 with
+  | Ret v => p2 v
+  | Do op rx => Do op (fun v => Bind (rx v) p2)
+  end.
 
 (** A sequence of procedures that a user might wish to run, where for each
     procedure in the sequence they specify a continuation to run on success,
@@ -49,18 +57,13 @@ Section Dynamics.
   Fixpoint exec {T} (p: proc T) : relation State State T :=
     match p with
     | Ret v => pure v
-    | Call op => step op
-    | Bind p p' => v <- exec p; exec (p' v)
+    | Do op p' => v <- step op; exec (p' v)
     end.
 
   Fixpoint exec_crash {T} (p: proc T) : relation State State unit :=
     match p with
     | Ret v => crash_step
-    | Call op => crash_step + (step op;; crash_step)
-    | Bind p p' =>
-      exec_crash p +
-      (v <- exec p;
-         exec_crash (p' v))
+    | Do op p' => crash_step + (v <- step op; exec_crash (p' v))
     end.
 
   Definition exec_recover {R} (rec: proc R) : relation State State R :=
@@ -109,4 +112,7 @@ Module ProcNotations.
   Delimit Scope proc_scope with proc.
   Notation "x <- p1 ; p2" := (Bind p1 (fun x => p2))
                                (at level 54, right associativity) : proc_scope.
+  Notation "x <- p1 ; p2" := (Call p1 (fun x => p2))
+                               (only printing,
+                                at level 54, right associativity) : proc_scope.
 End ProcNotations.

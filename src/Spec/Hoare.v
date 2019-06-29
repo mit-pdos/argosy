@@ -168,13 +168,13 @@ Section Hoare.
   Proof.
     unfold proc_rspec at 3. intros (Hp_ok&Hp_rec) Hrx.
     split.
-    - simpl; rew Hp_ok.
+    - rew exec_bind; rew Hp_ok.
       intros state state' t' (t&(state_mid&Hspec_mid&Hexec_mid)) Hpre'.
       specialize (Hrx _ Hpre') as (Hpre&Hok&Hrec).
       specialize (Hok t). rewrite proc_rspec_expand in Hok.
       destruct (Hok state_mid) as (Hrx_ok&Hrx_rec); simpl; eauto.
     - rewrite rexec_unfold. rewrite rexec_unfold in Hp_rec.
-      simpl. rewrite bind_dist_r.
+      rew exec_crash_bind. rewrite bind_dist_r.
       apply rel_or_elim.
       + rewrite Hp_rec; auto.
         intros state state' r Hspec_aexec Hpre'.
@@ -209,12 +209,12 @@ Section Hoare.
   Proof.
     unfold proc_hspec at 3. intros (Hp_ok&Hp_rec) Hrx.
     split.
-    - simpl; rew Hp_ok.
+    - rew exec_bind; rew Hp_ok.
       intros state state' t' (t&(state_mid&Hspec_mid&Hexec_mid)) Hpre'.
       specialize (Hrx _ Hpre') as (Hpre&Hok&Hrec).
       specialize (Hok t). rewrite proc_hspec_expand in Hok.
       destruct (Hok state_mid) as (Hrx_ok&Hrx_rec); simpl; eauto.
-    - simpl.
+    - rew exec_crash_bind.
       apply rel_or_elim.
       + rewrite Hp_rec; auto.
         intros state state' r Hspec_aexec Hpre'.
@@ -351,7 +351,7 @@ Section Hoare.
     proc_hspec (Call op) (op_spec sem op).
   Proof.
     unfold proc_hspec; split.
-    - intros state state' t Hexec Hpre; eauto.
+    - rew exec_call. intros state state' t Hexec Hpre; eauto.
     - simpl. apply rel_or_elim.
       * intros s s' [] Hl Hpre. simpl. split; auto.
       * intros s s' [] Hl Hpre.

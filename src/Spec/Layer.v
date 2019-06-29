@@ -25,9 +25,8 @@ Record LayerImpl C_Op Op :=
 
 Fixpoint compile Op C_Op `(impl: LayerImpl C_Op Op) T (p: proc Op T) : proc C_Op T :=
   match p with
-  | Call op => impl.(compile_op) op
   | Ret v => Ret v
-  | Bind p p' => Bind (impl.(compile) p) (fun v => impl.(compile) (p' v))
+  | Do op rx => Bind (impl.(compile_op) op) (fun v => impl.(compile) (rx v))
   end.
 
 Fixpoint compile_seq Op C_Op `(impl: LayerImpl C_Op Op) R (p: proc_seq Op R) :
@@ -66,6 +65,8 @@ Section Layers.
   Notation a_sem := a_layer.(sem).
   Notation a_exec_recover := (exec_recover a_layer.(sem)).
   Notation a_output := (initOutput a_layer).
+
+  Set Default Goal Selector "!".
 
   Definition compile_op_refines_step (impl: LayerImpl C_Op Op) (absr: relation AState CState unit) :=
     forall T (op: Op T),
@@ -113,14 +114,14 @@ Section Layers.
              (exec a_sem p).
   Proof.
     induction p; simpl; intros.
+    - unfold refines; norm.
     - pose unfolded (rf.(compile_op_ok) op)
            (fun H => hnf in H).
-      propositional.
-    - unfold refines; norm.
-    - unfold refines in *; norm.
-      left_assoc rew IHp.
+      unfold refines in *; norm.
+      rew exec_bind.
+      left_assoc rew H0.
       rel_congruence; norm.
-      rew<- H.
+      rew H.
   Qed.
 
   (* TODO: this is only for compatibility, get rid of it *)
@@ -138,13 +139,16 @@ Section Layers.
   Proof.
     unfold refines, rexec.
     induction rec; simpl; norm.
-    - pose unfolded (rf.(compile_op_ok) op)
+    - apply rf.(recovery_noop_ok).
+    - rew exec_crash_bind.
+      pose unfolded (rf.(compile_op_ok) op)
            (fun H => red in H; unfold rexec, refines in H).
-      rew H0.
-    - rew crash_step_refinement.
-    - Split; [ Left | Right ].
-      + rew IHrec.
-      + left_assoc rew (compile_exec_ok rec).
+      Split.
+      + rew H1; norm.
+        Split; [ Left | Right ].
+        rew exec_crash_noop.
+      + left_assoc rew H0.
+        Right.
         rew H.
   Qed.
 
@@ -163,7 +167,6 @@ Section Layers.
     rew compile_exec_ok.
   Qed.
 
-
   Lemma recover_ret R (rec: a_proc R) :
     refines rf.(absr)
                  (_ <- c_sem.(crash_step);
@@ -178,29 +181,47 @@ Section Layers.
     rew rexec_star_rec.
   Qed.
 
+  Theorem exec_crash_compile_rec T (rec: a_proc T) :
+    c_exec_recover (compile_rec rec) <--->
+                   (_ <- c_exec_recover recover;
+                      _ <- seq_star (_ <- exec_crash c_sem (compile rec);
+                                      c_exec_recover recover);
+                      c_exec (compile rec)).
+  Proof.
+    rewrite exec_recover_unfold at 1.
+    unfold compile_rec.
+    rew exec_crash_bind.
+    rew exec_bind.
+    rew denesting.
+    repeat setoid_rewrite <- bind_assoc.
+    rel_congruence.
+    norm.
+    rew seq_unit_sliding.
+    rewrite exec_recover_unfold; norm.
+  Qed.
+
   Theorem compile_rexec_ok T (p: a_proc T) R (rec: a_proc R) :
     refines rf.(absr)
                  (rexec c_sem (compile p) (compile_rec rec))
                  (rexec a_sem p rec).
   Proof.
-    unfold refines, rexec.
+    unfold refines, rexec; norm.
     induction p; simpl; norm.
-    - pose unfolded (rf.(compile_op_ok) op)
-        (fun H => hnf in H; unfold rexec, refines in H).
-      match goal with
-      | [ H: context[c_exec (compile_op _)] |- _ ] =>
-        clear H (* normal execution of op is irrelevant *)
-      end.
-      rew @exec_recover_bind.
-      left_assoc rew H0.
-      rew bind_star_unit.
-
-      rew rexec_star_rec.
     - rew recover_ret.
-    - Split; [ Left | Right ].
-      + rew IHp.
-      + left_assoc rew compile_exec_ok.
+    - rew exec_crash_bind.
+      pose unfolded (rf.(compile_op_ok) op)
+           (fun H => hnf in H; unfold rexec, refines in H).
+      Split.
+      + unfold compile_rec.
+        rew @exec_recover_bind.
+        left_assoc rew H1.
+        rew bind_star_unit.
+        rew rexec_star_rec.
+        norm.
+        rew<- exec_crash_noop.
+      + left_assoc rew H0.
         rew H.
+        Right.
   Qed.
 
   Theorem compile_exec_seq_ok R (p: a_proc_seq R) (rec: a_proc R):
@@ -314,8 +335,8 @@ Section Layers.
       destruct H0 as (i&cs1'&?&?).
       exists i, cs1'. split; intuition.
     }
-    destruct H2 as ([]&as1&?&?).
-    - edestruct H3 as ([]&?&((?&<-)&?)).
+    - destruct H2 as ([]&as1&?&?).
+      edestruct H3 as ([]&?&((?&<-)&?)).
       destruct H5 as (v&as2&?&?&?&?&?).
       inversion H7; subst; exists as1, as2. subst; split; auto.
     - repeat destruct H2. inversion H3; subst; eauto.
@@ -411,6 +432,7 @@ Lemma compile_init_ok:
 Proof.
   intros Op1 l1 Op2 l2 Op3 l3 rf1 rf2.
   unfold layer_impl_compose; simpl.
+  rew exec_bind.
   rewrite <- bind_assoc.
   rew rf1.(init_ok).
   Split.

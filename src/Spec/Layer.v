@@ -66,8 +66,6 @@ Section Layers.
   Notation a_exec_recover := (exec_recover a_layer.(sem)).
   Notation a_output := (initOutput a_layer).
 
-  Set Default Goal Selector "!".
-
   Definition compile_op_refines_step (impl: LayerImpl C_Op Op) (absr: relation AState CState unit) :=
     forall T (op: Op T),
       crash_refines absr c_sem

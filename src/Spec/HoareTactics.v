@@ -1,11 +1,10 @@
 Require Import Spec.Proc Spec.ProcTheorems.
-Require Import Tactical.Propositional.
-Require Import Tactical.ExistentialVariants.
-Require Import Tactical.Misc.
-Require Import Helpers.RelationAlgebra.
-Require Import Helpers.RelationRewriting.
-Require Import Helpers.RelationTheorems.
+From Tactical Require Import Propositional.
+From Tactical Require Import ExistentialVariants.
+From Tactical Require Import Misc.
 Require Import Spec.Hoare.
+
+From Transitions Require Import Relations Rewriting.
 
 Import RelationNotations.
 Ltac spec_intros := intros; first [ eapply rspec_intros | eapply hspec_intros ] ; intros.

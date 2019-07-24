@@ -1,8 +1,9 @@
 Require Import Examples.StatDb.Impl.
 
+From Transitions Require Import Relations Rewriting.
 Import RelationNotations.
-Require Import Helpers.RelationRewriting.
 
+(*
 Require Import Spec.WeakestPreconditions.
 Require Import Spec.WpRefine.
 
@@ -53,3 +54,4 @@ Proof.
     simpl; auto.
     simpl; auto.
 Abort.
+*)

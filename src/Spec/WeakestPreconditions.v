@@ -1,10 +1,12 @@
 Require Import Spec.Proc.
 Require Import Spec.ProcTheorems.
-Require Import Helpers.RelationAlgebra.
+
+From Transitions Require Import Relations.
 Require Import Tactical.ProofAutomation.
 
 Import RelationNotations.
 
+(*
 Section Dynamics.
   Context `(sem: Dynamics Op State).
   Notation proc := (proc Op).
@@ -107,3 +109,4 @@ End Dynamics.
 
 Arguments precondition State T : clear implicits.
 Arguments crashpre State : clear implicits.
+*)

@@ -1,47 +1,72 @@
 From Tactical Require Import Propositional.
+From Transitions Require Import Relations Rewriting NonError.
 
 Require Import Spec.Proc.
-
-Require Import Helpers.RelationAlgebra.
-Require Import Helpers.RelationRewriting.
 
 Import RelationNotations.
 
 Section Abstraction.
   Context (AState CState:Type).
   Context (absr: relation AState CState unit).
+  Context (absr_ok:NonError absr).
 
   Definition refines T
              (p: relation CState CState T)
              (spec: relation AState AState T) :=
-    absr;; p ---> v <- spec; absr;; pure v.
+    (absr;; p) ---> v <- spec; absr;; pure v.
+
+  Ltac cleanup :=
+    repeat match goal with
+           | [ x: unit |- _ ] => destruct x
+           | [ H: absr _ (Err _ _) |- _ ] =>
+             exfalso; eapply absr_ok; eapply H
+           | [ H: Val _ _ = Err _ _ |- _ ] =>
+             congruence
+           | [ H: Val _ _ = Val _ _ |- _ ] =>
+             inversion H; subst; clear H
+           | _ => eauto 10
+           end.
+
+  Ltac split_all :=
+    repeat (intuition propositional).
 
   Theorem refine_unfolded_iff T
           (p: relation CState CState T)
           (spec: relation AState AState T) :
-    (forall s s__a, absr s__a s tt ->
-             forall s' v, p s s' v ->
-                     exists s__a', spec s__a s__a' v /\
-                            absr s__a' s' tt) <->
+    (forall s s__a, absr s__a (Val s tt) ->
+             forall ret, p s ret ->
+                    match ret with
+                    | Val s' v =>
+                      (exists s__a', spec s__a (Val s__a' v) /\
+                              absr s__a' (Val s' tt)) \/
+                      spec s__a (Err _ _)
+                    | Err _ _ => spec s__a (Err _ _)
+                    end) <->
     refines p spec.
   Proof.
-    unfold refines, rimpl, and_then, pure; split.
-    - propositional.
-      destruct o1.
-      eapply H in H0; eauto; propositional.
-      eauto 10.
-    - intros. edestruct H; eauto. propositional.
-      destruct o1.
-      eauto 10.
+    unfold refines, rimpl, and_then, pure; split; intros.
+    - destruct y; split_all; cleanup.
+      specialize (H _ _ ltac:(eauto) _ ltac:(eauto));
+        split_all; cleanup.
+      specialize (H _ _ ltac:(eauto) _ ltac:(eauto));
+        split_all; cleanup.
+    - specialize (H s__a ret).
+      destruct ret; specialize (H ltac:(eauto));
+        split_all; cleanup.
   Qed.
 
   Theorem refine_unfolded T
           (p: relation CState CState T)
           (spec: relation AState AState T) :
-    (forall s s__a, absr s__a s tt ->
-             forall s' v, p s s' v ->
-                     exists s__a', spec s__a s__a' v /\
-                            absr s__a' s' tt) ->
+    (forall s s__a, absr s__a (Val s tt) ->
+             forall ret, p s ret ->
+                    match ret with
+                    | Val s' v =>
+                      (exists s__a', spec s__a (Val s__a' v) /\
+                              absr s__a' (Val s' tt)) \/
+                      spec s__a (Err _ _)
+                    | Err _ _ => spec s__a (Err _ _)
+                    end) ->
     refines p spec.
   Proof. eapply refine_unfolded_iff. Qed.
 
@@ -114,14 +139,14 @@ Proof.
   auto using refines_respects_bind.
 Qed.
 
-Theorem refines_respects_star State1 State2 abs T
+Theorem refines_respects_star State1 State2 abs {abs_ok:NonError abs} T
         (r1: relation State1 State1 T)
         (r2: relation State2 State2 T) :
   refines abs r1 r2 ->
   refines abs (seq_star r1) (seq_star r2).
 Proof.
   unfold refines. intros Hr.
-  rew simulation_seq_value; auto.
+  rew simulation_seq_value_no_err; auto.
 Qed.
 
 Theorem refines_respects_or State1 State2 abs T

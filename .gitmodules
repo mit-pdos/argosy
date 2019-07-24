@@ -7,3 +7,9 @@
 [submodule "vendor/classes"]
 	path = vendor/classes
 	url = https://github.com/tchajed/coq-classes
+[submodule "vendor/transitions"]
+	path = vendor/transitions
+	url = https://github.com/tchajed/coq-transitions.git
+[submodule "vendor/record-update"]
+	path = vendor/record-update
+	url = https://github.com/tchajed/coq-record-update.git

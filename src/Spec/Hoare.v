@@ -1,10 +1,10 @@
 Require Import Spec.Proc Spec.ProcTheorems.
-Require Import Tactical.Propositional.
-Require Import Helpers.RelationAlgebra.
-Require Import Helpers.RelationRewriting.
-Require Import Helpers.RelationTheorems.
+From Tactical Require Import ProofAutomation.
+From Transitions Require Import Relations Rewriting NonError.
 
 Import RelationNotations.
+
+Set Default Goal Selector "!".
 
 (** Defining specifications, which are just convenient ways to express program
 behavior. *)
@@ -16,13 +16,52 @@ Record SpecProps T R State :=
 
 Definition Specification T R State := State -> SpecProps T R State.
 
+Definition ret_matches B T (f: B -> T -> Prop) (ret: Return B T) :=
+  match ret with
+  | Val s' r => f s' r
+  | Err _ _ => False
+  end.
+
 Definition spec_exec T R State (spec: Specification T R State) :
   relation State State T :=
-  fun s s' r => (spec s).(pre) -> (spec s).(post) s' r.
+  fun s ret => (spec s).(pre) -> ret_matches (spec s).(post) ret.
 
 Definition spec_aexec T R State (spec: Specification T R State) :
   relation State State R :=
-  fun s s' r => (spec s).(pre) -> (spec s).(alternate) s' r.
+  fun s ret => (spec s).(pre) -> ret_matches (spec s).(alternate) ret.
+
+(*
+Instance spec_exec_NonError `(spec: Specification T R State) :
+  NonError (spec_exec spec).
+Proof.
+  unfold NonError, not; intros.
+  inversion H.
+Qed.
+
+Instance spec_aexec_NonError `(spec: Specification T R State) :
+  NonError (spec_aexec spec).
+Proof.
+  unfold NonError, not; intros.
+  inversion H.
+Qed. *)
+
+Theorem impl_spec_exec `(spec: Specification T R State) (r: relation _ _ _) :
+  (forall s, (spec s).(pre) ->
+        forall ret, r s ret ->
+               ret_matches (spec s).(post) ret) <->
+  r ---> spec_exec spec.
+Proof.
+  firstorder.
+Qed.
+
+Theorem impl_spec_aexec `(spec: Specification T R State) (r: relation _ _ _) :
+  (forall s, (spec s).(pre) ->
+        forall ret, r s ret ->
+               ret_matches (spec s).(alternate) ret) <->
+  r ---> spec_aexec spec.
+Proof.
+  firstorder.
+Qed.
 
 Definition spec_impl
            `(spec1: Specification T R State)
@@ -31,19 +70,35 @@ Definition spec_impl
             (forall s' v, (spec1 s).(post) s' v ->
                           (spec2 s).(post) s' v) /\
             (forall s' rv, (spec1 s).(alternate) s' rv ->
-                           (spec2 s).(alternate) s' rv).
+                      (spec2 s).(alternate) s' rv).
+
+Theorem spec_impl_rel
+        `(spec1: Specification T R State) spec2 :
+  spec_impl spec1 spec2 ->
+  spec_exec spec1 ---> spec_exec spec2 /\
+  spec_aexec spec1 ---> spec_aexec spec2.
+Proof.
+  unfold spec_impl; intros.
+  split.
+  - apply impl_spec_exec; intros.
+    eapply H in H0; propositional.
+    destruct ret; simpl in H1; firstorder.
+  - apply impl_spec_aexec; intros.
+    eapply H in H0; propositional.
+    destruct ret; simpl in H1; firstorder.
+Qed.
 
 Definition op_spec `(sem: Dynamics Op State) `(op : Op T) : Specification T unit State :=
   fun state =>
     {|
       pre := True;
       post :=
-        fun state' v => sem.(step) op state state' v;
+        fun state' v => sem.(step) op state (Val state' v);
       alternate :=
         fun state' r =>
-          r = tt /\ (crash_step sem state state' r
-                     \/ exists smid v, sem.(step) op state smid v
-                                       /\ crash_step sem smid state' r);
+          r = tt /\ (crash_step sem state (Val state' r)
+                     \/ exists smid v, sem.(step) op state (Val smid v)
+                                       /\ crash_step sem smid (Val state' r));
     |}.
 
 Section Hoare.
@@ -72,16 +127,26 @@ Section Hoare.
     proc_rspec p rec spec <->
     forall s,
       (spec s).(pre) ->
-      (forall s' v, exec p s s' v ->
-               (spec s).(post) s' v) /\
-      (forall s' rv, rexec p rec s s' rv ->
-                (spec s).(alternate) s' rv).
+      (forall ret, exec p s ret ->
+              ret_matches (spec s).(post) ret) /\
+      (forall ret, rexec p rec s ret ->
+              ret_matches (spec s).(alternate) ret).
   Proof.
-    unfold proc_rspec, rimpl, spec_exec, spec_aexec; split; intros.
-    - intuition eauto 10.
-    - split; intros x y ?.
-      specialize (H x); intuition eauto.
-      specialize (H x); intuition eauto.
+    unfold proc_rspec.
+    split; propositional.
+    - split; intros;
+        match goal with
+        | [ H: ?exec _ ---> _,
+               H': ?exec _ _ _ |- _ ] =>
+          apply H in H'; intuition eauto
+        end.
+      + apply H3 in H0; simpl in *; contradiction.
+      + apply H3 in H0; simpl in *; contradiction.
+    - split; unfold rimpl; intros; right.
+      + hnf; intros.
+        firstorder.
+      + hnf; intros.
+        firstorder.
   Qed.
 
   Theorem proc_hspec_expand T (p: proc T)
@@ -89,16 +154,26 @@ Section Hoare.
     proc_hspec p spec <->
     forall s,
       (spec s).(pre) ->
-      (forall s' v, exec p s s' v ->
-               (spec s).(post) s' v) /\
-      (forall s' rv, exec_crash p s s' rv ->
-                (spec s).(alternate) s' rv).
+      (forall ret, exec p s ret ->
+              ret_matches (spec s).(post) ret) /\
+      (forall ret, exec_crash p s ret ->
+              ret_matches (spec s).(alternate) ret).
   Proof.
-    unfold proc_hspec, rimpl, spec_exec, spec_aexec; split; intros.
-    - intuition eauto 10.
-    - split; intros x y ?.
-      specialize (H x); intuition eauto.
-      specialize (H x); intuition eauto.
+    unfold proc_hspec.
+    split; propositional.
+    - split; intros;
+        match goal with
+        | [ H: ?exec _ ---> _,
+               H': ?exec _ _ _ |- _ ] =>
+          apply H in H'; intuition eauto
+        end.
+      + apply H3 in H0; simpl in *; contradiction.
+      + apply H3 in H0; simpl in *; contradiction.
+    - split; unfold rimpl; intros; right.
+      + hnf; intros.
+        firstorder.
+      + hnf; intros.
+        firstorder.
   Qed.
 
   Theorem proc_rspec_impl
@@ -109,12 +184,11 @@ Section Hoare.
     proc_rspec p rec spec1 ->
     proc_rspec p rec spec2.
   Proof.
-    unfold spec_impl; intros.
-    pose proof (proj1 (proc_rspec_expand _ _ _) H0); clear H0.
-    apply proc_rspec_expand; intros.
-    specialize (H s); propositional.
-    specialize (H1 s); propositional.
-    eauto 10.
+    unfold proc_rspec; propositional.
+    apply spec_impl_rel in H; propositional.
+    split.
+    - etransitivity; eauto.
+    - etransitivity; eauto.
   Qed.
 
   Theorem proc_hspec_impl
@@ -125,10 +199,11 @@ Section Hoare.
     proc_hspec p spec1 ->
     proc_hspec p spec2.
   Proof.
-    unfold spec_impl; intros.
-    pose proof (proj1 (proc_hspec_expand _ _) H0); clear H0.
-    apply proc_hspec_expand; intros.
-    firstorder.
+    unfold proc_hspec; propositional.
+    apply spec_impl_rel in H; propositional.
+    split.
+    - etransitivity; eauto.
+    - etransitivity; eauto.
   Qed.
 
   Theorem proc_rspec_exec_equiv T `(spec: Specification T R State)
@@ -168,22 +243,52 @@ Section Hoare.
   Proof.
     unfold proc_rspec at 3. intros (Hp_ok&Hp_rec) Hrx.
     split.
-    - simpl; rew Hp_ok.
-      intros state state' t' (t&(state_mid&Hspec_mid&Hexec_mid)) Hpre'.
-      specialize (Hrx _ Hpre') as (Hpre&Hok&Hrec).
-      specialize (Hok t). rewrite proc_rspec_expand in Hok.
-      destruct (Hok state_mid) as (Hrx_ok&Hrx_rec); simpl; eauto.
+
+    - clear Hp_rec.
+      simpl; rew Hp_ok.
+      apply impl_spec_exec.
+      intros s Hpre.
+      specialize (Hrx _ Hpre); propositional.
+      destruct ret; simpl in *; propositional.
+      + specialize (H H0); simpl in *.
+        eapply H1 in H3.
+        intuition eauto.
+        * specialize (H4 H); simpl in *; contradiction.
+        * specialize (H4 H); simpl in *; auto.
+      + intuition propositional.
+        * specialize (H3 H0); simpl in *; contradiction.
+        * specialize (H H0); simpl in *; auto.
+          eapply H1 in H3.
+          intuition eauto.
+          -- specialize (H4 H); simpl in *; contradiction.
+          -- specialize (H4 H); simpl in *; auto.
+
     - rewrite rexec_unfold. rewrite rexec_unfold in Hp_rec.
-      simpl. rewrite bind_dist_r.
-      apply rel_or_elim.
-      + rewrite Hp_rec; auto.
-        intros state state' r Hspec_aexec Hpre'.
-        specialize (Hrx _ Hpre') as (Hpre&?&Hrec); eauto.
-      + rewrite bind_assoc, Hp_ok.
-        intros state state' t' (t&(state_mid&Hspec_mid&Hcrash_mid)) Hpre'.
-      specialize (Hrx _ Hpre') as (Hpre&Hok&Hrec).
-      specialize (Hok t). rewrite proc_rspec_expand in Hok.
-      destruct (Hok state_mid) as (Hrx_ok&Hrx_rec); simpl; eauto.
+      simpl.
+      Split.
+      + rew Hp_rec.
+        apply impl_spec_aexec.
+        unfold spec_aexec; propositional.
+        destruct ret; simpl in *; firstorder.
+      + rew Hp_ok.
+        change (let! v <- spec_exec spec;
+                    let! _ <- exec_crash (rx v);
+                       exec_recover sem rec) with
+            (let! v <- spec_exec spec;
+                rexec (rx v) rec).
+        apply impl_spec_aexec; intros s Hpre.
+        specialize (Hrx _ Hpre); propositional.
+        destruct ret; cbn [and_then ret_matches] in *; propositional.
+        * specialize (H H0); simpl in H.
+          eapply H1 in H3; intuition eauto.
+          -- specialize (H4 H); simpl in *; contradiction.
+          -- specialize (H4 H); simpl in *; auto.
+        * intuition propositional.
+          -- specialize (H3 H0); simpl in *; contradiction.
+          -- specialize (H H0); simpl in H.
+            eapply H1 in H3; intuition eauto.
+             ++ specialize (H4 H); simpl in *; contradiction.
+             ++ specialize (H4 H); simpl in *; auto.
   Qed.
 
   Theorem proc_hspec_rx T T' `(spec: Specification T unit State)
@@ -209,21 +314,46 @@ Section Hoare.
   Proof.
     unfold proc_hspec at 3. intros (Hp_ok&Hp_rec) Hrx.
     split.
-    - simpl; rew Hp_ok.
-      intros state state' t' (t&(state_mid&Hspec_mid&Hexec_mid)) Hpre'.
-      specialize (Hrx _ Hpre') as (Hpre&Hok&Hrec).
-      specialize (Hok t). rewrite proc_hspec_expand in Hok.
-      destruct (Hok state_mid) as (Hrx_ok&Hrx_rec); simpl; eauto.
+
+    - clear Hp_rec.
+      simpl; rew Hp_ok.
+      apply impl_spec_exec.
+      intros s Hpre.
+      specialize (Hrx _ Hpre); propositional.
+      destruct ret; simpl in *; propositional.
+      + specialize (H H0); simpl in *.
+        eapply H1 in H3.
+        intuition eauto.
+        * specialize (H4 H); simpl in *; contradiction.
+        * specialize (H4 H); simpl in *; auto.
+      + intuition propositional.
+        * specialize (H3 H0); simpl in *; contradiction.
+        * specialize (H H0); simpl in *; auto.
+          eapply H1 in H3.
+          intuition eauto.
+          -- specialize (H4 H); simpl in *; contradiction.
+          -- specialize (H4 H); simpl in *; auto.
+
     - simpl.
-      apply rel_or_elim.
-      + rewrite Hp_rec; auto.
-        intros state state' r Hspec_aexec Hpre'.
-        specialize (Hrx _ Hpre') as (Hpre&?&Hrec); eauto.
-      + rewrite Hp_ok.
-        intros state state' t' (t&(state_mid&Hspec_mid&Hcrash_mid)) Hpre'.
-        specialize (Hrx _ Hpre') as (Hpre&Hok&Hrec).
-        specialize (Hok t). rewrite proc_hspec_expand in Hok.
-        destruct (Hok state_mid) as (Hrx_ok&Hrx_rec); simpl; eauto.
+      Split.
+      + rew Hp_rec.
+        apply impl_spec_aexec.
+        unfold spec_aexec; propositional.
+        destruct ret; simpl in *; firstorder.
+      + rew Hp_ok.
+        apply impl_spec_aexec; intros s Hpre.
+        specialize (Hrx _ Hpre); propositional.
+        destruct ret; cbn [and_then ret_matches] in *; propositional.
+        * specialize (H H0); simpl in H.
+          eapply H1 in H3; intuition eauto.
+          -- specialize (H4 H); simpl in *; contradiction.
+          -- specialize (H4 H); simpl in *; auto.
+        * intuition propositional.
+          -- specialize (H3 H0); simpl in *; contradiction.
+          -- specialize (H H0); simpl in H.
+            eapply H1 in H3; intuition eauto.
+             ++ specialize (H4 H); simpl in *; contradiction.
+             ++ specialize (H4 H); simpl in *; auto.
   Qed.
 
   (** ** Reasoning about the [Ret] return operation.
@@ -269,28 +399,33 @@ Section Hoare.
     (forall state, pre (spec state) ->
                      post (spec state) state v /\
                      forall state', wipe state state' ->
-                                    forall (r : R), alternate (spec state) state' r) ->
+                           forall (r : R), alternate (spec state) state' r) ->
     proc_rspec (Ret v) rec spec .
   Proof.
     unfold proc_rspec; intros Hnoop Himpl; split.
-    - intros state state' t Hexec Hpre.
-      inversion Hexec; subst. specialize (Himpl _ Hpre). intuition.
+    - simpl.
+      apply impl_spec_exec; intros.
+      inv_clear H0; simpl.
+      eapply Himpl in H; propositional; eauto.
     - destruct (Hnoop _ v) as (?&->).
-      unfold spec_aexec. firstorder.
+      apply impl_spec_aexec; intros.
+      destruct ret; firstorder.
   Qed.
 
   Theorem ret_hspec T `(spec: Specification T unit State)
-          (v:T):
+          (v:T) (Hcrash_non_error: NonError crash_step):
     (forall state, pre (spec state) ->
-                     post (spec state) state v /\
-                     (forall state', crash_step state state' tt -> alternate (spec state) state' tt)) ->
+          post (spec state) state v /\
+          (forall state', crash_step state (Val state' tt) ->
+                 alternate (spec state) state' tt)) ->
     proc_hspec (Ret v) spec .
   Proof.
     unfold proc_hspec, spec_exec, spec_aexec; simpl.
     unfold "--->", pure; split; propositional.
-    specialize (H _ H1); propositional.
-    specialize (H _ H1); propositional.
-    destruct o; eauto.
+    - right; intros. specialize (H _ H0); propositional.
+    - right; intros. specialize (H _ H1); propositional.
+      destruct y; firstorder.
+      destruct t. firstorder.
   Qed.
 
   (** Define what it means for a spec to be idempotent: *)
@@ -326,7 +461,10 @@ Section Hoare.
       proc_rspec p rec spec.
   Proof.
     unfold proc_rspec at 2; intros H.
-    split; intros s s' r Hexec Hpre; eapply H; simpl; eauto.
+    split; intros; [ apply impl_spec_exec | apply impl_spec_aexec ]; intros.
+    - destruct ret; firstorder.
+    - eapply H in H1; propositional; eauto.
+      (intuition idtac); firstorder.
   Qed.
 
   Theorem hspec_intros T `(spec: Specification T unit State)
@@ -344,34 +482,32 @@ Section Hoare.
       proc_hspec p spec.
   Proof.
     unfold proc_hspec at 2; intros H.
-    split; intros s s' r Hexec Hpre; eapply H; simpl; eauto using tt.
+    split; intros; [ apply impl_spec_exec | apply impl_spec_aexec ]; intros.
+    - destruct ret; firstorder.
+    - eapply H in H1; propositional; eauto.
+      (intuition idtac); firstorder.
   Qed.
 
-  Theorem op_spec_sound T (op: Op T):
+  Theorem op_spec_sound T (op: Op T)
+          (Hop_nonerror: NonError (sem.(step) op))
+          (Hcrash_nonerror: NonError crash_step) :
     proc_hspec (Call op) (op_spec sem op).
   Proof.
     unfold proc_hspec; split.
-    - intros state state' t Hexec Hpre; eauto.
-    - simpl. apply rel_or_elim.
-      * intros s s' [] Hl Hpre. simpl. split; auto.
-      * intros s s' [] Hl Hpre.
-        inversion Hl as (?&?&?&Hrest).
-        firstorder.
+    - apply impl_spec_exec; intros.
+      unfold op_spec in H; simpl in *.
+      destruct ret; simpl; eauto.
+      apply Hop_nonerror in H0; auto.
+    - simpl. Split.
+      * apply impl_spec_aexec; intros.
+        destruct ret; firstorder.
+        destruct t; auto.
+      * apply impl_spec_aexec; intros.
+        destruct ret; firstorder.
+        destruct t; auto.
   Qed.
 
-  Theorem op_spec_complete T (op: Op T):
-    spec_exec (op_spec sem op) ---> exec (Call op) /\
-    spec_aexec (op_spec sem op) ---> exec_crash (Call op).
-  Proof. split; firstorder. Qed.
-
-  Theorem op_spec_complete1 T (op: Op T):
-    spec_exec (op_spec sem op) ---> exec (Call op).
-  Proof. firstorder. Qed.
-
-  Theorem op_spec_complete2 T (op: Op T):
-    spec_aexec (op_spec sem op) ---> crash_step + (sem.(step) op;; crash_step).
-  Proof. firstorder. Qed.
-
+  (*
   Lemma spec_aexec_cancel T R1 R2 (spec1 : Specification T R1 State)
           (spec2: Specification T R2 State) (r: relation State State R2) :
     (forall s, (spec2 s).(pre) -> (spec1 s).(pre)) ->
@@ -383,8 +519,19 @@ Section Hoare.
     destruct Hl as (r1&smid&?&?).
     eapply (Hrest s1 r1); eauto. exists tt, smid. split; simpl; eauto.
     unfold test. firstorder.
-  Qed.
+  Qed. *)
 
+  Theorem spec_exec_impl `(p_hspec: Specification T unit State)
+          `(p_rspec: Specification T R State) :
+    (forall s, (p_rspec s).(pre) -> (p_hspec s).(pre) /\
+               (forall s' v, (p_hspec s).(post) s' v ->
+                        (p_rspec s).(post) s' v)) ->
+    spec_exec p_hspec ---> spec_exec p_rspec.
+  Proof.
+    intros.
+    apply impl_spec_exec.
+    destruct ret; firstorder.
+  Qed.
 
   Theorem proc_hspec_to_rspec A' T R (p_hspec: Specification T unit State)
           `(rec_hspec: A' -> Specification R unit State)
@@ -412,10 +559,11 @@ Section Hoare.
     intros Himpl1 Hc_crash_r Hr_alt.
     split.
     - rew Hpe; auto.
-      intros s1 s2 t Hl Hpre.
-      eapply Himpl1; eauto. eapply Hl. eapply Himpl1; eauto.
+      apply spec_exec_impl; eauto.
     - unfold rexec. rewrite Hpc.
       unfold exec_recover.
+      admit.
+      (*
       eapply spec_aexec_cancel.
       { eapply Himpl1. }
 
@@ -447,7 +595,8 @@ Section Hoare.
         split; [| eauto].
         edestruct Hidemp as (a''&?); eauto.
         eapply Hc; eauto. eexists; intuition eauto.
-      * apply any_seq_star_any.
-   Qed.
+      * apply any_seq_star_any. *)
+      Fail idtac.
+  Admitted.
 
 End Hoare.

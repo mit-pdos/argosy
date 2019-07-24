@@ -1,4 +1,4 @@
-Require Import Helpers.RelationAlgebra.
+From Transitions Require Import Relations.
 Require Import List.
 
 Global Set Implicit Arguments.
@@ -68,7 +68,7 @@ Section Dynamics.
 
   Definition exec_recover_unfold {R} (rec: proc R) :
     exec_recover rec =
-    seq_star (exec_crash rec);; exec rec := eq_refl.
+    _ <- seq_star (exec_crash rec); exec rec := eq_refl.
 
   (* recovery execution *)
   Definition rexec {T R} (p: proc T) (rec: proc R) : relation State State R :=
@@ -76,7 +76,7 @@ Section Dynamics.
 
   Definition rexec_unfold {T R} (p: proc T) (rec: proc R) :
     rexec p rec =
-    exec_crash p;; exec_recover rec := eq_refl.
+    _ <- exec_crash p; exec_recover rec := eq_refl.
 
   Definition exec_or_rexec {T R} (p : proc T) (rec: proc R) : relation State State (T + R) :=
     (v <- exec p; pure (inl v)) + (v <- rexec p rec; pure (inr v)).
@@ -108,5 +108,7 @@ Module ProcNotations.
   (* Declare Scope proc_scope. *)
   Delimit Scope proc_scope with proc.
   Notation "x <- p1 ; p2" := (Bind p1 (fun x => p2))
-                               (at level 54, right associativity) : proc_scope.
+                               (at level 20,
+                                p1 at level 100,
+                                p2 at level 200, right associativity) : proc_scope.
 End ProcNotations.

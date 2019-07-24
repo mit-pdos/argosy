@@ -1,10 +1,11 @@
-Require Import Setoid.
-Require Import Morphisms.
-Require Import Proc.
+From Coq Require Import Setoid.
+From Coq Require Import Morphisms.
+
 From Classes Require Import Classes.
-Require Import Helpers.RelationAlgebra.
-Require Import Helpers.RelationRewriting.
-Require Import Tactical.ProofAutomation.
+From Transitions Require Import Relations Rewriting.
+From Tactical Require Import ProofAutomation.
+
+Require Import Proc.
 
 Import RelationNotations.
 
@@ -21,14 +22,12 @@ Section Dynamics.
   Hint Resolve rimpl_refl requiv_refl : core.
 
   Theorem exec_crash_finish T (p: proc T) :
-    exec p;; crash_step ---> exec_crash p.
+    (_ <- exec p; crash_step) ---> exec_crash p.
   Proof.
     induction p; simpl in *; norm.
-    - rewrite <- rel_or_intror.
-      reflexivity.
-    - setoid_rewrite H.
-      rewrite <- rel_or_intror.
-      eauto.
+    - Right.
+    - rew H.
+      Right.
   Qed.
 
   Theorem exec_crash_noop T (p: proc T) :
@@ -37,7 +36,7 @@ Section Dynamics.
     induction p; simpl in *; norm.
     - Left.
     - Left.
-      auto.
+      assumption.
   Qed.
 
   Theorem exec_crash_ret T (v: T) :
@@ -147,7 +146,7 @@ Section Dynamics.
 
   Theorem exec_recover_to_rexec
           `(rec: proc R) :
-    crash_step;; exec_recover rec ---> rexec rec rec.
+    (_ <- crash_step; exec_recover rec) ---> rexec rec rec.
   Proof.
     unfold rexec, exec_recover.
     setoid_rewrite <- exec_crash_noop at 2; norm.
@@ -158,7 +157,7 @@ Section Dynamics.
   Proof. induction rec; simpl; firstorder. Qed.
 
   Lemma exec_crash_ret_recover_fold `(rec: proc R):
-    _ <- exec_crash (Ret tt); exec_recover rec ---> exec_recover rec.
+    (_ <- exec_crash (Ret tt); exec_recover rec) ---> exec_recover rec.
   Proof.
     setoid_rewrite (exec_crash_ret_proc rec).
     unfold exec_recover.

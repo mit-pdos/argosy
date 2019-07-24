@@ -1,5 +1,6 @@
 From Coq Require Import List.
 
+From Transitions Require Import NonError.
 From RecoveryRefinement Require Export Lib.
 
 Module Var.
@@ -36,6 +37,8 @@ Module Var.
        initP := fun s => s = (0, 0)|}.
 End Var.
 
+Instance var_crash_step_nonerror : NonError Var.dynamics.(crash_step) := _.
+
 Module DB.
   Inductive Op : Type -> Type :=
   | Add (n:nat) : Op unit
@@ -56,6 +59,8 @@ Module DB.
        sem := dynamics;
        initP := fun s => s = nil |}.
 End DB.
+
+Instance db_crash_step_nonerror : NonError DB.dynamics.(crash_step) := _.
 
 Definition read i := Call (Var.Read i).
 Definition write i v := Call (Var.Write i v).

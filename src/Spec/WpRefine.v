@@ -1,10 +1,10 @@
 From Tactical Require Import Propositional.
 
-Require Import Helpers.RelationAlgebra.
+From Transitions Require Import Relations.
 
 Require Import Spec.Proc.
+(*
 Require Import Spec.WeakestPreconditions.
-Require Import Spec.Abstraction.
 
 Section Dynamics.
   Context `(sem: Dynamics Op State).
@@ -28,3 +28,4 @@ Section Dynamics.
     eapply wp_ok in H0; eauto.
   Qed.
 End Dynamics.
+*)

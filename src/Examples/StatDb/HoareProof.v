@@ -1,15 +1,24 @@
 Require Import Examples.StatDb.Impl.
 
-Require Import Helpers.RelationRewriting.
+From Transitions Require Import NonError.
 
 Require Import Spec.Hoare.
 Require Import Spec.HoareTactics.
 Require Import Spec.AbstractionSpec.
 
 Definition absr : relation DB.l.(State) Var.l.(State) unit :=
-  fun l s _ =>
-    fst s = fold_right plus 0 l /\
-    snd s = length l.
+  fun l res =>
+    match res with
+    | Val s _ =>
+      fst s = fold_right plus 0 l /\
+      snd s = length l
+    | Err _ _ => False
+    end.
+
+Instance absr_non_error : NonError absr.
+Proof.
+  compute; auto.
+Qed.
 
 Definition init_hspec : Specification InitStatus unit Var.State :=
   fun state =>
@@ -64,12 +73,18 @@ Definition recover_spec : Specification unit unit Var.State :=
 Lemma read_op_ok :
   forall i,
     proc_hspec Var.dynamics (read i) (op_spec Var.dynamics (Var.Read i)).
-Proof. intros. eapply op_spec_sound. Qed.
+Proof. intros. eapply op_spec_sound.
+       typeclasses eauto.
+       typeclasses eauto.
+Qed.
 
 Lemma write_op_ok :
   forall i v,
     proc_hspec Var.dynamics (write i v) (op_spec Var.dynamics (Var.Write i v)).
-Proof. intros. eapply op_spec_sound. Qed.
+Proof. intros. eapply op_spec_sound.
+       typeclasses eauto.
+       typeclasses eauto.
+Qed.
 
 Hint Resolve read_op_ok write_op_ok : core.
 
@@ -94,7 +109,12 @@ Ltac step :=
   unshelve (step_proc); simplify; finish.
 
 Lemma recover_cok : proc_hspec Var.dynamics (impl.(recover)) recover_spec.
-Proof. simpl. eapply ret_hspec; firstorder. Qed.
+Proof. simpl. eapply ret_hspec.
+       - typeclasses eauto.
+       - firstorder.
+         inversion H0; subst.
+         simpl; auto.
+Qed.
 
 Lemma recover_idempotent :
   idempotent (fun (t: unit) => recover_spec).
@@ -110,7 +130,10 @@ Proof. eapply proc_hspec_to_rspec; eauto. intros []; eauto. Qed.
 
 Lemma init_cok :
   proc_hspec Var.dynamics (impl.(init)) (init_hspec).
-Proof. eapply ret_hspec; firstorder. Qed.
+Proof. eapply ret_hspec.
+       - typeclasses eauto.
+       - firstorder.
+Qed.
 
 Lemma util_and3 (P Q R:Prop) :
   P -> Q -> R -> P /\ Q /\ R.
@@ -132,10 +155,10 @@ Ltac extract_pre H :=
   end.
 
 Lemma crash_step_simp s s' r :
-  Var.dynamics.(crash_step) s s' r ->
+  Var.dynamics.(crash_step) s (Val s' r) ->
   s' = (0, 0).
 Proof.
-  compute; auto.
+  compute; inversion 1; auto.
 Qed.
 
 Lemma op_step_crash T (op: Var.Op T) u s' r :
@@ -144,7 +167,7 @@ Lemma op_step_crash T (op: Var.Op T) u s' r :
 Proof.
   intros.
   hnf in H; propositional.
-  destruct H0; propositional.
+  destruct H0; propositional; eauto using crash_step_simp.
 Qed.
 
 Ltac extract_crash H :=

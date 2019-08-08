@@ -201,12 +201,14 @@ Ltac step_bind :=
 
 Ltac step_ret :=
   apply ret_hspec; cbn [pre post alternate];
-  (let H := fresh "Hpre" in
-   intros * H; extract_pre H);
-  apply conj;
-  [ extract_post
-  | let H := fresh "Hcrash" in
-    intros * H; extract_crash H; extract_post ].
+  [ typeclasses eauto
+  | (let H := fresh "Hpre" in
+     intros * H; extract_pre H);
+    apply conj;
+    [ extract_post
+    | let H := fresh "Hcrash" in
+      intros * H; extract_crash H; extract_post ]
+  ].
 
 Ltac newstep :=
   monad_simpl;

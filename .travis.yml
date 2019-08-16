@@ -1,5 +1,4 @@
-dist: trusty
-sudo: required
+dist: bionic
 language: minimal
 
 services:

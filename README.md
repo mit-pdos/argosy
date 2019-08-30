@@ -2,6 +2,10 @@
 
 [![Build Status](https://travis-ci.org/mit-pdos/argosy.svg?branch=master)](https://travis-ci.org/mit-pdos/argosy)
 
+<p>
+  <img src="https://raw.githubusercontent.com/mit-pdos/argosy/master/argosy-logo-200.png" width="150">
+</p>
+
 Proving crash safety of systems by proving an implementation refines a
 specification. Argosy supports implementing layered storage systems with a
 recovery procedure per layer, and modular verification of each layer independent

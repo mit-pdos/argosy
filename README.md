@@ -16,7 +16,7 @@ example.
 
 ## Compiling
 
-We develop Argosy using Coq master. It should be compatible with Coq v8.9.0
+We develop Argosy using Coq master. It should be compatible with Coq v8.9.1
 and Coq v8.8.2, which are tested as part of continuous integration.
 
 This project uses git submodules to include several dependencies. Before

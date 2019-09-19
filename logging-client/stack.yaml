@@ -2,7 +2,7 @@
 # http://docs.haskellstack.org/en/stable/yaml_configuration/
 
 # GHC 8.6.5
-resolver: lts-13.26
+resolver: lts-14.6
 
 packages:
 - '.'

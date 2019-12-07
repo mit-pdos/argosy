@@ -1,5 +1,7 @@
+version: ~> 1.0
 dist: bionic
-language: minimal
+language: shell
+os: linux
 
 services:
   - docker
@@ -11,7 +13,7 @@ cache:
 env:
   global:
   - NJOBS="2"
-  matrix:
+  jobs:
   - COQ_IMAGE="coqorg/coq:dev"
   - COQ_IMAGE="coqorg/coq:8.9"
   - COQ_IMAGE="coqorg/coq:8.8.2"

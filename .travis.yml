@@ -11,12 +11,11 @@ cache:
     - $HOME/.stack
 
 env:
-  global:
-  - NJOBS="2"
   jobs:
   - COQ_IMAGE="coqorg/coq:dev"
+  - COQ_IMAGE="coqorg/coq:8.11"
+  - COQ_IMAGE="coqorg/coq:8.10"
   - COQ_IMAGE="coqorg/coq:8.9"
-  - COQ_IMAGE="coqorg/coq:8.8.2"
 
 before_install:
   # Download and unpack the stack executable
@@ -50,7 +49,7 @@ script:
   docker exec COQ /bin/bash --login -c "
     export PS4='+ \e[33;1m(\$0 @ line \$LINENO) \$\e[0m '
     set -ex
-    make -j${NJOBS} -k all test
+    make -j2 -k all test
     chmod -R a+rw logging-client
     "
 - cd logging-client

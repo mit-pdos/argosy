@@ -14,8 +14,6 @@ env:
   jobs:
   - COQ_IMAGE="coqorg/coq:dev"
   - COQ_IMAGE="coqorg/coq:8.11"
-  - COQ_IMAGE="coqorg/coq:8.10"
-  - COQ_IMAGE="coqorg/coq:8.9"
 
 before_install:
   # Download and unpack the stack executable

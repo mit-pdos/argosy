@@ -21,7 +21,7 @@ example.
 ## Compiling
 
 We develop Argosy using Coq master. It should be compatible with Coq v8.11,
-v8.10, and v8.9, which are tested as part of continuous integration.
+which is tested as part of continuous integration.
 
 This project uses git submodules to include several dependencies. Before
 compiling, run `git submodule update --init --recursive` to set those up.

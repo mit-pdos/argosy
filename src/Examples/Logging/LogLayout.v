@@ -246,7 +246,7 @@ Qed.
 Local Hint Resolve read_ok write_ok size_ok : core.
 
 Ltac step :=
-  step_proc; simplify; finish.
+  step_proc; simplify; eauto.
 
 Opaque index.
 Opaque D.ODLayer.
@@ -625,7 +625,7 @@ Theorem log_write_ok ps a v :
        |}).
 Proof.
   unfold log_write.
-  step; split_wlog; simplify; finish.
+  step_proc; split_wlog; simplify; finish.
   destruct (hdr_full r).
   step; simplify; finish.
   destruct ps; eauto.

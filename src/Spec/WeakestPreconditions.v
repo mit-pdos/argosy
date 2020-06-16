@@ -68,7 +68,7 @@ Section Dynamics.
   Ltac after_crash :=
     try match goal with
         | [ H: after_crash ?crash _ |- _ ] =>
-          eauto using (@after_crash_unfold crash _ H)
+          pose (@after_crash_unfold crash _ H); eauto
         end.
 
   Fixpoint crashcond T (p: proc T) : crashpre :=

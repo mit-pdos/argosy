@@ -1,4 +1,5 @@
 From Coq Require Import List.
+From Coq Require Import Arith.
 
 From RecoveryRefinement Require Export Lib.
 

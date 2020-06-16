@@ -39,7 +39,7 @@ Inductive PhyDecode (d: disk) : PhysicalState -> Prop :=
 
 Lemma log_length_nonzero : LOG_LENGTH > 0.
   unfold LOG_LENGTH.
-  omega.
+  lia.
 Qed.
 
 (* coercion magic makes this theorem seem odd - the proof comes from inside
@@ -60,12 +60,12 @@ Theorem PhyDecode_disk_bound d ps :
 Proof.
   pose proof log_length_nonzero.
   inversion 1; subst.
-  specialize (Hlog_values (LOG_LENGTH-1) ltac:(omega)).
+  specialize (Hlog_values (LOG_LENGTH-1) ltac:(lia)).
   rewrite (index_inbounds log_values (LOG_LENGTH-1)) in Hlog_values;
     autorewrite with length;
-    try omega.
+    try lia.
   apply index_some_bound in Hlog_values.
-  omega.
+  lia.
 Qed.
 
 Theorem PhyDecode_data_len d ps :
@@ -76,7 +76,7 @@ Proof.
   apply length_bounds.
   - apply index_none_bound.
     rewrite <- Hdata; array.
-  - assert (length d <= 2 + LOG_LENGTH + length data); try omega.
+  - assert (length d <= 2 + LOG_LENGTH + length data); try lia.
     apply index_none_bound.
     rewrite Hdata; array.
 Qed.
@@ -88,7 +88,7 @@ Proof.
   intros.
   pose proof (PhyDecode_disk_bound H).
   pose proof (PhyDecode_data_len H).
-  omega.
+  lia.
 Qed.
 
 Lemma one_disk_failure_unfold s s' r :
@@ -137,7 +137,7 @@ Ltac finish :=
          | _ => match_abs
          | _ => solve [ eauto ]
          | _ => congruence
-         | _ => omega
+         | _ => lia
          end.
 
 Lemma and_wlog (P Q:Prop) :
@@ -462,7 +462,7 @@ Proof.
   step.
   pose proof (PhyDecode_data_len H).
   intuition eauto.
-  omega.
+  lia.
 Qed.
 
 Local Hint Resolve phy_log_size_ok : core.
@@ -498,7 +498,7 @@ Proof.
   f_equal.
   (* BUG: rewrite does not try to instantiate def using the typeclass without
   the (def:=_) *)
-  rewrite (index_inbounds (def:=_)) in H1 by omega.
+  rewrite (index_inbounds (def:=_)) in H1 by lia.
   simpl in *; propositional.
   auto using sel_log_value.
 Qed.
@@ -521,7 +521,7 @@ Proof.
     autorewrite with array in *;
     auto.
 
-  rewrite (index_inbounds (def:=_)) in * by omega; simpl.
+  rewrite (index_inbounds (def:=_)) in * by lia; simpl.
   simpl in *; propositional.
   apply sel_index_eq; auto.
 Qed.
@@ -677,7 +677,7 @@ Lemma log_subslice_len_ok:
     ~ length state < 2 + LOG_LENGTH -> length (subslice state 2 LOG_LENGTH) = LOG_LENGTH.
 Proof.
   intros.
-  rewrite length_subslice; omega.
+  rewrite length_subslice; lia.
 Qed.
 
 Theorem phy_log_init_ok :

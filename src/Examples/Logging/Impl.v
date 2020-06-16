@@ -51,19 +51,19 @@ Definition hdr_full (hdr:LogHdr) :
   destruct (lt_dec (hdr.(log_length)) LOG_LENGTH).
   right; auto.
   pose proof (hdr.(log_length_ok)).
-  left; omega.
+  left; lia.
 Defined.
 
 Definition hdr_inc (hdr:LogHdr) (pf:hdr.(log_length) < LOG_LENGTH) : LogHdr.
   refine {| committed := hdr.(committed);
             log_length := hdr.(log_length) + 1; |}.
-  abstract omega.
+  abstract lia.
 Defined.
 
 Definition empty_hdr : LogHdr.
   refine {| committed := false;
             log_length := 0; |}.
-  abstract omega.
+  abstract lia.
 Defined.
 
 Definition hdr_setcommit (hdr:LogHdr) : LogHdr :=

@@ -165,7 +165,7 @@ Proof.
     rewrite (logd_loglen ltac:(eassumption)) in *.
     destruct (i == length ls.(ls_log)); subst; array.
     + rewrite Nat.sub_diag; simpl; auto.
-    + apply H1; omega.
+    + apply H1; lia.
 Qed.
 
 Hint Resolve log_decode_app : core.
@@ -183,11 +183,11 @@ Theorem zip_index A B {defA: Default A} {defB: Default B} (l1: list A) (l2: list
 Proof.
   generalize dependent l2.
   induction l1; simpl; intros.
-  omega.
-  destruct l2; simpl in *; try omega.
+  lia.
+  destruct l2; simpl in *; try lia.
   destruct i; simpl.
   reflexivity.
-  rewrite IHl1 by omega.
+  rewrite IHl1 by lia.
   reflexivity.
 Qed.
 
@@ -197,8 +197,8 @@ Theorem zip_length1 A B (l1: list A) (l2: list B) :
 Proof.
   generalize dependent l2.
   induction l1; simpl; intros; auto.
-  destruct l2; simpl in *; try omega.
-  rewrite IHl1 by omega; auto.
+  destruct l2; simpl in *; try lia.
+  rewrite IHl1 by lia; auto.
 Qed.
 
 Lemma log_decode_some_log:
@@ -230,7 +230,7 @@ Proof.
   - intros.
     rewrite index_firstn by auto.
     pose proof hdr.(log_length_ok).
-    erewrite zip_index; eauto; autorewrite with length; try omega.
+    erewrite zip_index; eauto; autorewrite with length; try lia.
 Qed.
 
 Hint Resolve log_decode_some_log : core.
@@ -302,8 +302,8 @@ Theorem log_apply_one_more : forall d log i a v len,
     massign (subslice log i (S len)) d.
 Proof.
   intros.
-  replace (i + 1) with (S i) in * by omega.
-  erewrite subslice_one_more; eauto; try omega.
+  replace (i + 1) with (S i) in * by lia.
+  erewrite subslice_one_more; eauto; try lia.
   simpl; auto.
 Qed.
 
@@ -324,9 +324,9 @@ Proof.
 Qed.
 
 Hint Resolve logd_log_value : core.
-Hint Extern 3 (_ < _) => omega : core.
-Hint Extern 3 (_ <= _) => omega : core.
-Hint Extern 3 (@eq nat _ _) => omega : core.
+Hint Extern 3 (_ < _) => lia : core.
+Hint Extern 3 (_ <= _) => lia : core.
+Hint Extern 3 (@eq nat _ _) => lia : core.
 
 Definition applied_after log i d0 :=
   massign (subslice log i (length log - i)) d0.
@@ -374,9 +374,9 @@ Section ApplyAtRespec.
   Proof.
     spec_impl; split_cases; simplify; finish.
     pose proof (logd_log_bounds ltac:(eassumption)).
-    omega.
+    lia.
 
-    - destruct (index_dec ls.(ls_log) i); propositional; try omega.
+    - destruct (index_dec ls.(ls_log) i); propositional; try lia.
       destruct (sel ls.(ls_log) i) as [a v].
       descend; intuition eauto.
       erewrite logd_log_value in * by eauto; eauto.
@@ -437,7 +437,7 @@ Proof.
     destruct ls; simpl in *; congruence.
   - step; split_cases; simplify; finish.
     unfold applied_after, fully_applied.
-    replace (length ls.(ls_log) - i) with (S len) by omega.
+    replace (length ls.(ls_log) - i) with (S len) by lia.
     auto.
 
     spec_intros; simplify.
@@ -485,7 +485,7 @@ Lemma LogDecode_clear_hdr:
 Proof.
   intros; subst.
   constructor; simpl; intros; array.
-  omega.
+  lia.
 Qed.
 
 Hint Resolve LogDecode_clear_hdr : core.
@@ -547,9 +547,9 @@ Proof.
     repeat simpl_match.
   step; split_cases; simplify; finish.
 
-  erewrite logd_loglen by eauto; omega.
+  erewrite logd_loglen by eauto; lia.
   rewrite subslice_whole; eauto.
-  erewrite logd_loglen by eauto; omega.
+  erewrite logd_loglen by eauto; lia.
 
   spec_intros; simplify.
   spec_impl; split_cases; simplify; finish.
@@ -700,7 +700,7 @@ Proof.
     intuition eauto.
   destruct ps; simpl in *.
   constructor; intros; array; eauto.
-  omega.
+  lia.
 Qed.
 
 Hint Resolve log_apply_ok : core.

@@ -1,5 +1,7 @@
 From Coq Require Export List.
-From Coq Require Export Omega.
+From Coq Require Export Lia.
+From Coq Require Export Arith.Compare_dec.
+From Coq Require Export Arith.
 
 From Classes Require Export Classes.
 Require Export Helpers.RelationAlgebra.

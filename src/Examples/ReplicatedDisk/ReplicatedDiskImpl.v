@@ -281,7 +281,7 @@ Module ReplicatedDisk.
       S n <= m /\ n <> m.
   Proof.
     intros.
-    omega.
+    lia.
   Qed.
 
   Theorem equal_after_assign : forall a d_0 d_1 b,
@@ -371,7 +371,7 @@ Module ReplicatedDisk.
   Proof.
     unfold equal_after; intuition.
     eapply index_ext_eq; intros.
-    eapply H1; omega.
+    eapply H1; lia.
   Qed.
 
   Theorem equal_after_size : forall d_0 d_1,
@@ -379,7 +379,7 @@ Module ReplicatedDisk.
       equal_after (length d_0) d_0 d_1.
   Proof.
     unfold equal_after; intuition.
-    assert (~a' < length d_0) by omega.
+    assert (~a' < length d_0) by lia.
     assert (~a' < length d_1) by congruence.
     autorewrite with array; eauto.
   Qed.
@@ -796,15 +796,15 @@ Module ReplicatedDisk.
       * specialize (IHa d FullySynced).
         simplify; finish.
         destruct r; step.
-        omega.
-      * split; [intuition; eauto; try omega|].
+        lia.
+      * split; [intuition; eauto; try lia|].
         simplify; finish.
         destruct r.
         ** spec_intros. simpl in H3. destruct H3.
            *** specialize (IHa d (OutOfSync a0 b)).
-               step. omega.
+               step. lia.
            *** specialize (IHa (assign d a0 b) FullySynced).
-               step. autorewrite with length in *; omega.
+               step. autorewrite with length in *; lia.
         ** step.
   Qed.
 
@@ -981,7 +981,7 @@ Module ReplicatedDisk.
       * exists (prot_sync1); simplify; finish.
       * exists (prot_out); simpl.
         intuition eauto.
-      * assert (a < length d \/ a >= length d) as [Hlt|Hoob] by omega.
+      * assert (a < length d \/ a >= length d) as [Hlt|Hoob] by lia.
         ** exists (prot_sync2); simplify; finish.
         ** exists (prot_sync1); simplify; finish.
     - unfold rd_abstraction in *; simplify. destruct a0, H0.

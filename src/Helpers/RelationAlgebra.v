@@ -95,19 +95,19 @@ Section OutputRelations.
   Definition rimpl {A B} {T} (r1 r2: relation A B T) :=
     forall x y o, r1 x y o -> r2 x y o.
 
-  Global Instance rimpl_preorder T : PreOrder (rimpl (A:=A) (B:=B) (T:=T)) :=
+  Global Instance rimpl_preorder {A B} T : PreOrder (rimpl (A:=A) (B:=B) (T:=T)) :=
     ltac:(firstorder).
 
   Definition requiv {A B} {T} (r1 r2: relation A B T) :=
     forall x y o, r1 x y o <-> r2 x y o.
 
-  Global Instance requiv_equivalence : Equivalence (requiv (A:=A) (B:=B) (T:=T)) :=
+  Global Instance requiv_equivalence {A B T} : Equivalence (requiv (A:=A) (B:=B) (T:=T)) :=
     RelInstance.
 
   Infix "--->" := rimpl (at level 60, no associativity).
   Infix "<--->" := requiv (at level 60, no associativity).
 
-  Global Instance rimpl_requiv_sub : subrelation (requiv (A:=A) (B:=B) (T:=T)) rimpl :=
+  Global Instance rimpl_requiv_sub {A B T} : subrelation (requiv (A:=A) (B:=B) (T:=T)) rimpl :=
     ltac:(firstorder).
 
   Global Instance rimpl_proper_basics_flip A B T (r: relation A B T) :
@@ -198,13 +198,13 @@ Section OutputRelations.
 
 
   (* first some respectful/congruence rules *)
-  Global Instance or_respects_equiv :
+  Global Instance or_respects_equiv {A B T} :
     Proper (requiv ==> requiv ==> requiv) (rel_or (A:=A) (B:=B) (T:=T)).
   Proof.
     t.
   Qed.
 
-  Global Instance or_respects_impl :
+  Global Instance or_respects_impl {A B T} :
     Proper (rimpl ==> rimpl ==> rimpl) (rel_or (A:=A) (B:=B) (T:=T)).
   Proof.
     t.
@@ -231,7 +231,7 @@ Section OutputRelations.
     t.
   Qed.
 
-  Global Instance and_then_respectful :
+  Global Instance and_then_respectful {A B C T1 T2} :
     Proper (rimpl ==> pointwise_relation _ rimpl ==> rimpl) (and_then (A:=A) (B:=B) (C:=C) (T1:=T1) (T2:=T2)).
   Proof.
     unfold Proper, "==>"; intros.
@@ -287,7 +287,7 @@ Section OutputRelations.
     t.
   Qed.
 
-  Global Instance and_then_respectful_equiv :
+  Global Instance and_then_respectful_equiv {A B C T1 T2} :
     Proper (requiv ==> pointwise_relation _ requiv ==> requiv) (and_then (A:=A) (B:=B) (C:=C) (T1:=T1) (T2:=T2)).
   Proof.
     unfold Proper, "==>"; intros.
@@ -296,14 +296,14 @@ Section OutputRelations.
 
   Hint Constructors seq_star : core.
 
-  Global Instance seq_star_respectful :
+  Global Instance seq_star_respectful {A T} :
     Proper (rimpl ==> rimpl) (seq_star (A:=A) (T:=T)).
   Proof.
     t.
     induction H0; eauto.
   Qed.
 
-  Global Instance seq_star_equiv_respectful :
+  Global Instance seq_star_equiv_respectful {A T} :
     Proper (requiv ==> requiv) (seq_star (A:=A) (T:=T)).
   Proof.
     t.
@@ -313,7 +313,7 @@ Section OutputRelations.
 
   Hint Constructors bind_star : core.
 
-  Global Instance bind_star_respectful :
+  Global Instance bind_star_respectful {A T} :
     Proper (pointwise_relation _ rimpl ==> eq ==> rimpl) (bind_star (A:=A) (T:=T)).
   Proof.
     t.
@@ -321,7 +321,7 @@ Section OutputRelations.
     specialize (H o1); eauto.
   Qed.
 
-  Global Instance bind_star_equiv_respectful :
+  Global Instance bind_star_equiv_respectful {A T} :
     Proper (pointwise_relation _ requiv ==> eq ==> requiv) (bind_star (A:=A) (T:=T)).
   Proof.
     t.

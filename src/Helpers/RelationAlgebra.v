@@ -671,7 +671,7 @@ Section OutputRelations.
       setoid_rewrite star_duplicate at 2; cong.
       cong.
 
-      Grab Existential Variables.
+      Unshelve.
       all: trivial.
   Qed.
 
@@ -771,7 +771,7 @@ Section OutputRelations.
     - induction H; propositional; eauto.
       clear H.
       induction IHseq_star_r; propositional; eauto.
-      Grab Existential Variables.
+      Unshelve.
       all: auto.
   Qed.
 
@@ -838,7 +838,7 @@ Section OutputRelations.
       end; eauto; propositional.
       eauto 10.
 
-      Grab Existential Variables.
+      Unshelve.
       all: auto.
   Qed.
 
@@ -866,7 +866,7 @@ Section OutputRelations.
       end; eauto; propositional.
       eauto 15.
 
-      Grab Existential Variables.
+      Unshelve.
       all: auto.
   Qed.
 

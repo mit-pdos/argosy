@@ -136,7 +136,7 @@ Proof.
   destruct desc; auto.
 Qed.
 
-Global Hint Rewrite length_descriptor : length.
+Hint Rewrite length_descriptor : length.
 
 Lemma log_decode_app:
   forall (ps : PhysicalState) (ls : LogicalState)

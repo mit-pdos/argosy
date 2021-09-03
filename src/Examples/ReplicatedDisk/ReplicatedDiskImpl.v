@@ -547,7 +547,7 @@ Module ReplicatedDisk.
     exfalso; apply index_not_none in Heqo; auto.
   Qed.
 
-  Global Hint Rewrite assign_maybe_same using (solve [ auto ]) : array.
+  Hint Rewrite assign_maybe_same using (solve [ auto ]) : array.
   Global Hint Resolve PeanoNat.Nat.lt_neq : core.
   Global Hint Resolve disks_eq_inbounds : core.
 

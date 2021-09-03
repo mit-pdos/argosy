@@ -45,7 +45,7 @@ Definition compile_rec Op C_Op
 Definition initOutput {A} `(L: Layer Op) (r: relation (State L) (State L) A) (v : A) : Prop :=
   exists s1 s2, L.(initP) s1 /\ r s1 s2 v.
 
-Hint Unfold refines : relation_rewriting.
+Global Hint Unfold refines : relation_rewriting.
 
 Section Layers.
 

@@ -78,7 +78,7 @@ Definition getdesc: proc D.Op Descriptor :=
 Definition writedesc (ds:Descriptor) :=
   write 1 (Descriptor_fmt.(encode) ds).
 
-Instance def_desc : Default Descriptor.
+Global Instance def_desc : Default Descriptor.
   refine {| addresses := List.repeat 0 LOG_LENGTH |}.
   apply repeat_length.
 Defined.

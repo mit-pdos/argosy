@@ -62,7 +62,7 @@ Proof.
   inversion 1; auto.
 Qed.
 
-Hint Resolve logd_disk : core.
+Global Hint Resolve logd_disk : core.
 
 Lemma logd_loglen ps ls :
   LogDecode ps ls ->
@@ -78,7 +78,7 @@ Proof.
   inversion 1; auto.
 Qed.
 
-Hint Resolve logd_committed : core.
+Global Hint Resolve logd_committed : core.
 
 Lemma logd_log_contents ps ls :
   LogDecode ps ls ->
@@ -136,7 +136,7 @@ Proof.
   destruct desc; auto.
 Qed.
 
-Hint Rewrite length_descriptor : length.
+Global Hint Rewrite length_descriptor : length.
 
 Lemma log_decode_app:
   forall (ps : PhysicalState) (ls : LogicalState)
@@ -168,7 +168,7 @@ Proof.
     + apply H1; lia.
 Qed.
 
-Hint Resolve log_decode_app : core.
+Global Hint Resolve log_decode_app : core.
 
 Fixpoint zip A B (l1: list A) (l2: list B) : list (A*B) :=
   match l1, l2 with
@@ -233,7 +233,7 @@ Proof.
     erewrite zip_index; eauto; autorewrite with length; try lia.
 Qed.
 
-Hint Resolve log_decode_some_log : core.
+Global Hint Resolve log_decode_some_log : core.
 
 Theorem log_write_ok ps ls a v :
   proc_hspec
@@ -293,7 +293,7 @@ Proof.
   erewrite logd_log_value by eauto; auto.
 Qed.
 
-Hint Resolve log_decode_apply_one : core.
+Global Hint Resolve log_decode_apply_one : core.
 
 Theorem log_apply_one_more : forall d log i a v len,
     index log i = Some (a, v) ->
@@ -323,10 +323,10 @@ Proof.
     rewrite assign_assign_ne by auto; auto.
 Qed.
 
-Hint Resolve logd_log_value : core.
-Hint Extern 3 (_ < _) => lia : core.
-Hint Extern 3 (_ <= _) => lia : core.
-Hint Extern 3 (@eq nat _ _) => lia : core.
+Global Hint Resolve logd_log_value : core.
+Global Hint Extern 3 (_ < _) => lia : core.
+Global Hint Extern 3 (_ <= _) => lia : core.
+Global Hint Extern 3 (@eq nat _ _) => lia : core.
 
 Definition applied_after log i d0 :=
   massign (subslice log i (length log - i)) d0.
@@ -392,7 +392,7 @@ Section ApplyAtRespec.
   Qed.
 End ApplyAtRespec.
 
-Hint Resolve log_apply_at_ok : core.
+Global Hint Resolve log_apply_at_ok : core.
 
 Theorem apply_upto_ok ps ls d0 desc len i :
   proc_hspec
@@ -488,7 +488,7 @@ Proof.
   lia.
 Qed.
 
-Hint Resolve LogDecode_clear_hdr : core.
+Global Hint Resolve LogDecode_clear_hdr : core.
 
 Definition log_apply_spec ps ls d0 is_commit : Specification unit unit disk :=
     (fun state =>
@@ -703,7 +703,7 @@ Proof.
   lia.
 Qed.
 
-Hint Resolve log_apply_ok : core.
+Global Hint Resolve log_apply_ok : core.
 
 Lemma LogDecode_setcommit:
   forall (ps : PhysicalState) (ls : LogicalState),
@@ -722,7 +722,7 @@ Proof.
   destruct H0; constructor; simpl; propositional; array.
 Qed.
 
-Hint Resolve LogDecode_setcommit : core.
+Global Hint Resolve LogDecode_setcommit : core.
 
 Theorem log_commit_ok ps ls :
   proc_hspec

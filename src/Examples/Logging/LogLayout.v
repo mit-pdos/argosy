@@ -50,7 +50,7 @@ Proof.
   destruct log_values; auto.
 Qed.
 
-Hint Rewrite length_log : length.
+Global Hint Rewrite length_log : length.
 
 (* TODO: Hint Rewrite length_descriptor breaks a proof here *)
 
@@ -105,7 +105,7 @@ Proof.
   simpl; eauto using one_disk_failure_unfold.
 Qed.
 
-Hint Resolve ODLayer_crash : core.
+Global Hint Resolve ODLayer_crash : core.
 
 Ltac match_abs :=
   match goal with

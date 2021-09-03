@@ -214,4 +214,4 @@ Section specs.
   Qed.
 End specs.
 
-Hint Resolve write_ok size_ok read_ok : core.
+Global Hint Resolve write_ok size_ok read_ok : core.

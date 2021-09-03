@@ -6,11 +6,10 @@ on:
       - master
   pull_request:
     branches:
-      - '**'
+      - "**"
   schedule:
     # Tuesday 8am UTC (3am EST)
-    - cron: '0 8 * * TUE'
-
+    - cron: "0 8 * * TUE"
 
 jobs:
   build:
@@ -18,12 +17,14 @@ jobs:
     strategy:
       matrix:
         image:
-          - 'coqorg/coq:dev'
-          - 'coqorg/coq:8.13'
-          - 'coqorg/coq:8.12'
+          - "coqorg/coq:dev"
+          - "coqorg/coq:8.13"
+          - "coqorg/coq:8.12"
       fail-fast: false
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: true
       - uses: coq-community/docker-coq-action@v1
         with:
           custom_image: ${{ matrix.image }}
@@ -44,7 +45,6 @@ jobs:
         # to avoid a warning at cleanup time
         if: ${{ always() }}
         run: sudo chown -R 1001:116 .
-
 # See also:
 # https://github.com/coq-community/docker-coq-action#readme
 # https://github.com/erikmd/docker-coq-github-action-demo

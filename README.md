@@ -1,6 +1,6 @@
 # Argosy: verifying layered storage systems with recovery refinement
 
-[![Build Status](https://travis-ci.org/mit-pdos/argosy.svg?branch=master)](https://travis-ci.org/mit-pdos/argosy)
+[![CI](https://github.com/mit-pdos/argosy/actions/workflows/coq-action.yml/badge.svg)](https://github.com/mit-pdos/argosy/actions/workflows/coq-action.yml)
 
 <p>
   <img src="https://raw.githubusercontent.com/mit-pdos/argosy/master/argosy-logo-200.png" width="150">
@@ -20,8 +20,8 @@ example.
 
 ## Compiling
 
-We develop Argosy using Coq master. It should be compatible with Coq v8.11,
-which is tested as part of continuous integration.
+We develop Argosy using Coq master. It should also be compatible with Coq 8.12
+and 8.13, which are tested as part of continuous integration.
 
 This project uses git submodules to include several dependencies. Before
 compiling, run `git submodule update --init --recursive` to set those up.

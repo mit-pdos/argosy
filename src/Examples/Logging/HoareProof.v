@@ -71,7 +71,7 @@ Proof.
     rewrite <- pf.
     eassumption.
 
-    Grab Existential Variables.
+    Unshelve.
     simpl; auto.
 Qed.
 
@@ -122,7 +122,7 @@ Proof.
     descend; intuition eauto.
     rewrite <- pf; eassumption.
 
-    Grab Existential Variables.
+    Unshelve.
     simpl; auto.
 Qed.
 
@@ -208,7 +208,7 @@ Proof.
     descend; intuition eauto.
     rewrite <- pf; eassumption.
 
-    Grab Existential Variables.
+    Unshelve.
     simpl; auto.
 Qed.
 

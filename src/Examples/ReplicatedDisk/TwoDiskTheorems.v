@@ -203,7 +203,7 @@ Section specs.
     unshelve prim; eauto;
       try solve [ destruct_all ].
     match goal with
-    | |- context[S a <= length ?d] => destruct (le_dec (S a) (length d2))
+    | |- context[S a <= length ?d] => destruct (le_dec (S a) (length d))
     end.
     - destruct_all.
     - autorewrite with array.

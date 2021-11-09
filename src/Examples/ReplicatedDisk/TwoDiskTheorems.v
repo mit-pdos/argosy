@@ -202,6 +202,7 @@ Section specs.
   Proof.
     unshelve prim; eauto;
       try solve [ destruct_all ].
+    try rename d0 into d2. (* compat: variable is named d2 in coq < 8.15 but d0 in coq >= 8.15 *)
     destruct (le_dec (S a) (length d2)).
     destruct_all.
     autorewrite with array.

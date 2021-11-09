@@ -627,7 +627,7 @@ Proof.
   unfold log_write.
   step_proc; split_wlog; simplify; finish.
   destruct (hdr_full r).
-  step; simplify; finish.
+  { step; simplify; finish. }
   destruct ps; eauto.
   step; split_wlog; simplify; finish.
   step; split_wlog; simplify; finish.
@@ -698,16 +698,16 @@ Proof.
   unfold log_init.
   step.
   destruct matches.
-  step.
-  unfold writehdr, writedesc.
-  repeat step.
-  exists {| p_hdr := empty_hdr;
-       p_desc := default;
-       p_log_values := {| values := subslice state 2 LOG_LENGTH;
-                          values_ok := ltac:(auto using log_subslice_len_ok) |};
-       p_data_region := subslice state (2+LOG_LENGTH) (length state - 2 - LOG_LENGTH); |};
-    simpl.
-  intuition eauto.
-  constructor; intros; simpl; array.
-  destruct (index_dec state (2 + LOG_LENGTH + i)); propositional; array.
+  - step.
+  - unfold writehdr, writedesc.
+    repeat step.
+    exists {| p_hdr := empty_hdr;
+          p_desc := default;
+           p_log_values := {| values := subslice state 2 LOG_LENGTH;
+                               values_ok := ltac:(auto using log_subslice_len_ok) |};
+            p_data_region := subslice state (2+LOG_LENGTH) (length state - 2 - LOG_LENGTH); |};
+      simpl.
+    intuition eauto.
+    constructor; intros; simpl; array.
+    destruct (index_dec state (2 + LOG_LENGTH + i)); propositional; array.
 Qed.

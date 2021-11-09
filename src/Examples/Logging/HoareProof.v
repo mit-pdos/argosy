@@ -173,8 +173,8 @@ Proof.
       unfold logical_abstraction in *; simpl; propositional.
     + right; split_cases; finish.
     + split_cases.
-      left; split_cases; finish.
-      right; split_cases; finish.
+      * left; split_cases; finish.
+      * right; split_cases; finish.
 Qed.
 
 Local Hint Resolve log_size_ok : core.
@@ -323,10 +323,10 @@ Proof.
     intros; destruct_txnd; intros.
   spec_intros; simpl in *; simplify.
   rspec_impl; (intuition eauto); simplify.
-  destruct v0.
-  - eexists (_, _); (intuition eauto); simpl.
-    array.
-  - eexists (_, _); (intuition eauto); simpl.
+  - destruct v0.
+    + eexists (_, _); (intuition eauto); simpl.
+      array.
+    + eexists (_, _); (intuition eauto); simpl.
   - eexists (_, _); (intuition eauto); simpl.
 Qed.
 
@@ -420,7 +420,7 @@ Module LoggingRefinement.
     destruct op; cbn [Impl compile_op recover].
     - eapply proc_rspec_crash_refines_op; intros;
         eauto using log_commit_abs_ok; destruct_txnd; simpl in *; simplify; finish.
-      constructor.
+      { constructor. }
       split_cases; eauto.
       right.
       exists (d0, d0), tt; simpl.

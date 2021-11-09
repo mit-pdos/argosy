@@ -183,12 +183,12 @@ Theorem zip_index A B {defA: Default A} {defB: Default B} (l1: list A) (l2: list
 Proof.
   generalize dependent l2.
   induction l1; simpl; intros.
-  lia.
-  destruct l2; simpl in *; try lia.
-  destruct i; simpl.
-  reflexivity.
-  rewrite IHl1 by lia.
-  reflexivity.
+  - lia.
+  - destruct l2; simpl in *; try lia.
+    destruct i; simpl.
+    + reflexivity.
+    + rewrite IHl1 by lia.
+      reflexivity.
 Qed.
 
 Theorem zip_length1 A B (l1: list A) (l2: list B) :
@@ -316,11 +316,11 @@ Proof.
   - congruence.
   - destruct a as [a v'].
     destruct i; simpl.
-    inv_clear H.
-    array.
-    destruct (a == a0); subst; array.
-    erewrite IHlog; eauto.
-    rewrite assign_assign_ne by auto; auto.
+    + inv_clear H.
+      array.
+    + destruct (a == a0); subst; array.
+      erewrite IHlog; eauto.
+      rewrite assign_assign_ne by auto; auto.
 Qed.
 
 Global Hint Resolve logd_log_value : core.
@@ -373,9 +373,8 @@ Section ApplyAtRespec.
          |}).
   Proof.
     spec_impl; split_cases; simplify; finish.
-    pose proof (logd_log_bounds ltac:(eassumption)).
-    lia.
-
+    - pose proof (logd_log_bounds ltac:(eassumption)).
+      lia.
     - destruct (index_dec ls.(ls_log) i); propositional; try lia.
       destruct (sel ls.(ls_log) i) as [a v].
       descend; intuition eauto.
@@ -386,7 +385,7 @@ Section ApplyAtRespec.
     - exists ls.(ls_disk); intuition eauto.
       destruct ps, ls; simpl in *; congruence.
     - eexists; split.
-      right; eauto.
+      { right; eauto. }
       erewrite logd_disk in * by eauto.
       destruct H0; econstructor; simpl in *; eauto.
   Qed.
@@ -431,40 +430,40 @@ Proof.
   gen ps ls d0 desc i.
   induction len; simpl; intros.
   - step; split_cases; simplify; finish.
-    destruct ls; simpl in *; congruence.
-    exists ls.(ls_disk).
-    intuition eauto.
-    destruct ls; simpl in *; congruence.
+    + destruct ls; simpl in *; congruence.
+    + exists ls.(ls_disk).
+      intuition eauto.
+      destruct ls; simpl in *; congruence.
   - step; split_cases; simplify; finish.
-    unfold applied_after, fully_applied.
-    replace (length ls.(ls_log) - i) with (S len) by lia.
-    auto.
+    + unfold applied_after, fully_applied.
+      replace (length ls.(ls_log) - i) with (S len) by lia.
+      auto.
 
-    spec_intros; simplify.
-    lazymatch goal with
-    | [ H: PhyDecode _ ?ps' |- _ ] =>
-      eapply proc_hspec_impl;
-        [ unfold spec_impl |
-          apply (IHlen ps' {| ls_committed := true;
-                              ls_log := ls.(ls_log);
-                              ls_disk := ps'.(p_data_region) |}) ]
-    end; simpl; split_cases; simplify;
-      try erewrite logd_disk in * by eauto;
-      finish;
-      simpl in *.
-    { fold addr block in *.
-      rewrite log_apply_one_more; eauto.
-      fold addr block in *.
-      rewrite H4.
-      rewrite <- H5.
-      erewrite <- log_apply_reapply_one by eauto; auto. }
-    { erewrite <- log_apply_reapply_one in * by eauto.
-      congruence. }
-    { eexists; intuition eauto.
-      replace (massign ls.(ls_log) disk).
-      erewrite <- log_apply_reapply_one by eauto; auto. }
-    { eexists; intuition eauto.
-      erewrite <- log_apply_reapply_one by eauto; auto. }
+    + spec_intros; simplify.
+      lazymatch goal with
+      | [ H: PhyDecode _ ?ps' |- _ ] =>
+        eapply proc_hspec_impl;
+          [ unfold spec_impl |
+            apply (IHlen ps' {| ls_committed := true;
+                                 ls_log := ls.(ls_log);
+                                  ls_disk := ps'.(p_data_region) |}) ]
+      end; simpl; split_cases; simplify;
+        try erewrite logd_disk in * by eauto;
+        finish;
+        simpl in *.
+      { fold addr block in *.
+        rewrite log_apply_one_more; eauto.
+        fold addr block in *.
+        rewrite H4.
+        rewrite <- H5.
+        erewrite <- log_apply_reapply_one by eauto; auto. }
+      { erewrite <- log_apply_reapply_one in * by eauto.
+        congruence. }
+      { eexists; intuition eauto.
+        replace (massign ls.(ls_log) disk).
+        erewrite <- log_apply_reapply_one by eauto; auto. }
+    + eexists; intuition eauto.
+      erewrite <- log_apply_reapply_one by eauto; auto.
 Qed.
 
 Local Hint Resolve gethdr_ok : core.
@@ -541,46 +540,43 @@ Theorem log_apply_ok ps ls is_commit :
 Proof.
   unfold log_apply, log_apply_spec.
   step; split_cases; simplify; finish.
-  destruct_with_eqn (r.(committed)).
-  step; split_cases; simplify; finish;
-    erewrite logd_committed in * by eauto;
-    repeat simpl_match.
-  step; split_cases; simplify; finish.
+  - destruct_with_eqn (r.(committed)).
+    + step; split_cases; simplify; finish;
+      erewrite logd_committed in * by eauto;
+      repeat simpl_match.
+      { step; split_cases; simplify; finish.
+        - erewrite logd_loglen by eauto; lia.
+        - rewrite subslice_whole; eauto.
+          erewrite logd_loglen by eauto; lia.
 
-  erewrite logd_loglen by eauto; lia.
-  rewrite subslice_whole; eauto.
-  erewrite logd_loglen by eauto; lia.
+        - spec_intros; simplify.
+          spec_impl; split_cases; simplify; finish.
 
-  spec_intros; simplify.
-  spec_impl; split_cases; simplify; finish.
-  erewrite logd_disk in * by eauto; simpl in *; auto.
+          + erewrite logd_disk in * by eauto; simpl in *; auto.
+          + left.
+            eexists; intuition eauto.
+            rewrite massign_idempotent; auto.
+          + right.
+            erewrite logd_disk in * by eauto; simpl in *; auto. }
+      left.
+      exists ls.(ls_disk); intuition eauto.
+      destruct ls; simpl in *; congruence.
 
-  left.
-  eexists; intuition eauto.
-  rewrite massign_idempotent; auto.
+    + monad_simpl.
+      spec_impl; split_cases; simplify; finish;
+        erewrite logd_committed in * by eauto;
+        repeat simpl_match;
+        eauto.
 
-  right.
-  erewrite logd_disk in * by eauto; simpl in *; auto.
+      exists ls.(ls_log).
+      destruct ls; simpl in *; congruence.
 
-  left.
-  exists ls.(ls_disk); intuition eauto.
-  destruct ls; simpl in *; congruence.
-
-  monad_simpl.
-  spec_impl; split_cases; simplify; finish;
-    erewrite logd_committed in * by eauto;
-    repeat simpl_match;
-    eauto.
-
-  exists ls.(ls_log).
-  destruct ls; simpl in *; congruence.
-
-  destruct_with_eqn (ls.(ls_committed)); eauto.
-  left.
-  exists ls.(ls_disk); intuition eauto.
-  destruct ls; simpl in *; congruence.
-  exists ls.(ls_log).
-  destruct ls; simpl in *; congruence.
+  - destruct_with_eqn (ls.(ls_committed)); eauto.
+    + left.
+      exists ls.(ls_disk); intuition eauto.
+      destruct ls; simpl in *; congruence.
+    + exists ls.(ls_log).
+      destruct ls; simpl in *; congruence.
 Qed.
 
 Theorem recovery_ok ps ls is_commit :
@@ -763,15 +759,15 @@ Theorem log_commit_ok ps ls :
        |}).
 Proof.
   step; split_cases; simplify; finish.
-  step; split_cases; simplify; finish.
-  spec_impl; simpl; split_cases; simplify; finish.
-  simpl in *.
-  descend; intuition eauto.
+  - step; split_cases; simplify; finish.
+    + spec_impl; simpl; split_cases; simplify; finish.
+      simpl in *.
+      descend; intuition eauto.
 
-  - right.
-    exists ls.(ls_log).
-    destruct ls; simpl in *; congruence.
-  - left; left; eauto.
+    + right.
+      exists ls.(ls_log).
+      destruct ls; simpl in *; congruence.
+    + left; left; eauto.
   - right.
     exists ls.(ls_log).
     destruct ls; simpl in *; congruence.

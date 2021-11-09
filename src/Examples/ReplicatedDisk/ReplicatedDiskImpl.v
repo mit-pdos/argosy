@@ -228,16 +228,15 @@ Module ReplicatedDisk.
     step.
 
     destruct r; step.
-    descend; intuition eauto.
+    - descend; intuition eauto.
 
-    step.
-    destruct r; (intuition eauto); simplify.
-    destruct (lt_dec a (length d)).
-    eauto.
-    simplify.
-
-    destruct r; step.
-    destruct r; step.
+      step.
+      destruct r; (intuition eauto); simplify.
+    - destruct (lt_dec a (length d)).
+      + eauto.
+        simplify.
+        destruct r; step.
+      + destruct r; step.
   Qed.
 
   Global Hint Resolve write_int_ok : core.
@@ -289,10 +288,10 @@ Module ReplicatedDisk.
       equal_after a (assign d_0 a b) (assign d_1 a b).
   Proof.
     unfold equal_after; intuition.
-    autorewrite with length; eauto.
-    apply le_eq_or_S_le in H; intuition subst.
-    destruct (lt_dec a' (length d_0)); autorewrite with array; auto.
-    autorewrite with array; auto.
+    - autorewrite with length; eauto.
+    - apply le_eq_or_S_le in H; intuition subst.
+      + destruct (lt_dec a' (length d_0)); autorewrite with array; auto.
+      + autorewrite with array; auto.
   Qed.
 
   Global Hint Resolve equal_after_assign : core.
@@ -350,8 +349,8 @@ Module ReplicatedDisk.
     unfold sizeInit.
     step.
     destruct r.
-    step.
-    - destruct r.
+    - step.
+      destruct r.
       + destruct (length d_0 == v).
         * step.
         * step.
@@ -539,12 +538,12 @@ Module ReplicatedDisk.
       autorewrite with array;
       auto.
     destruct_with_eqn (index d a); simpl in *; subst; eauto.
-    apply index_ext_eq; intros i.
-    destruct (lt_dec i (length d)), (a == i);
-      subst;
-      autorewrite with array;
-      auto.
-    exfalso; apply index_not_none in Heqo; auto.
+    - apply index_ext_eq; intros i.
+      destruct (lt_dec i (length d)), (a == i);
+        subst;
+        autorewrite with array;
+        auto.
+    - exfalso; apply index_not_none in Heqo; auto.
   Qed.
 
   Hint Rewrite assign_maybe_same using (solve [ auto ]) : array.
@@ -583,8 +582,8 @@ Module ReplicatedDisk.
     destruct (v == v0); subst; try step.
 
     Unshelve.
-    auto.
-    exact (fun _ => True).
+    { auto. }
+    { exact (fun _ => True). }
   Qed.
 
   Theorem fixup_correct_addr_ok : forall a d b,
@@ -670,12 +669,11 @@ Module ReplicatedDisk.
     destruct r; try step.
 
     destruct (v == v0); subst.
-    step.
-
-    step.
+    - step.
+    - step.
     Unshelve.
-    auto.
-    exact (fun _ => True).
+    { auto. }
+    { exact (fun _ => True). }
   Qed.
 
   Ltac spec_case pf :=
@@ -738,7 +736,7 @@ Module ReplicatedDisk.
       + spec_case (fixup_wrong_addr_ok a d b a0); simplify; finish.
         destruct v; finish.
       + spec_case fixup_correct_addr_ok; simplify; finish.
-        split. intuition eauto.
+        split. { intuition eauto. }
         simplify; finish.
         destruct v; finish.
   Qed.
@@ -861,17 +859,20 @@ Module ReplicatedDisk.
     destruct s; simplify.
     + step.
       unshelve (step).
-      exact d. exact FullySynced. simplify; finish.
+      { exact d. } { exact FullySynced. }
+      simplify; finish.
       step.
     + step.
       intuition eauto.
-      simplify.
+      { simplify. }
       destruct (lt_dec a (length d)).
       * unshelve (step).
-        exact d. exact (OutOfSync a b). simplify; finish.
+        { exact d. } { exact (OutOfSync a b). }
+        simplify; finish.
         step.
       * unshelve (step).
-        exact d. exact FullySynced. simplify.
+        { exact d. } { exact FullySynced. }
+        simplify.
         step.
   Qed.
 
@@ -889,28 +890,34 @@ Module ReplicatedDisk.
     destruct rp; simplify.
     + step.
         unshelve (step).
-        exact d. exact FullySynced. simplify; finish.
+        { exact d. } { exact FullySynced. }
+        simplify; finish.
+        step.
+    + step.
+      intuition eauto.
+      { simplify. }
+      destruct (lt_dec a (length d)).
+      * unshelve (step).
+        { exact d. } { exact (OutOfSync a b). }
+        simplify; finish.
+        step.
+      * unshelve (step).
+        { exact d. } { exact FullySynced. }
+        simplify.
         step.
     + step.
       intuition eauto.
       simplify.
       destruct (lt_dec a (length d)).
       * unshelve (step).
-        exact d. exact (OutOfSync a b). simplify; finish.
-        step.
-      * unshelve (step).
-        exact d. exact FullySynced. simplify.
-        step.
-    + step.
-      intuition eauto.
-      simplify.
-      destruct (lt_dec a (length d)).
-      * unshelve (step).
-        exact (assign d a b). exact (OutOfSync a b). simplify; finish.
+        { exact (assign d a b). }
+        { exact (OutOfSync a b). }
+        simplify; finish.
         step.
         intuition simplify.
       * unshelve (step).
-        exact (assign d a b). exact (FullySynced). simplify; finish.
+        { exact (assign d a b). } { exact (FullySynced). }
+        simplify; finish.
         step.
   Qed.
 

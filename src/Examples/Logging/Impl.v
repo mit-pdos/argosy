@@ -49,9 +49,9 @@ Definition writehdr (hdr:LogHdr) :=
 Definition hdr_full (hdr:LogHdr) :
   {hdr.(log_length) = LOG_LENGTH} + {hdr.(log_length) < LOG_LENGTH}.
   destruct (lt_dec (hdr.(log_length)) LOG_LENGTH).
-  right; auto.
-  pose proof (hdr.(log_length_ok)).
-  left; lia.
+  - right; auto.
+  - pose proof (hdr.(log_length_ok)).
+    left; lia.
 Defined.
 
 Definition hdr_inc (hdr:LogHdr) (pf:hdr.(log_length) < LOG_LENGTH) : LogHdr.

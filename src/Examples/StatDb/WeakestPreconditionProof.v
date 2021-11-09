@@ -50,6 +50,6 @@ Proof.
     descend; intuition eauto.
     descend; intuition eauto.
     descend; intuition eauto.
-    simpl; auto.
-    simpl; auto.
+    + simpl; auto.
+    + simpl; auto.
 Abort.

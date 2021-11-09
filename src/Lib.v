@@ -15,3 +15,7 @@ Require Export Spec.AbstractionSpec.
 Require Export Spec.Layer.
 
 Export ProcNotations.
+
+(* require proofs to be strictly bulleted (with only one goal focused at a
+time) *)
+Global Set Default Goal Selector "!".

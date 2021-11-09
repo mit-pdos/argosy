@@ -202,10 +202,12 @@ Section specs.
   Proof.
     unshelve prim; eauto;
       try solve [ destruct_all ].
-    destruct (le_dec (S a) (length d2)).
-    destruct_all.
-    autorewrite with array.
-    destruct_all.
+    match goal with
+    | |- context[S a <= length ?d] => destruct (le_dec (S a) (length d2))
+    end.
+    - destruct_all.
+    - autorewrite with array.
+      destruct_all.
   Qed.
 
   Theorem size_ok : forall i dF, proc_hspec TDBaseDynamics (td.size i) (size_spec i dF).

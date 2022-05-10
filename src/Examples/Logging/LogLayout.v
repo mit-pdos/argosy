@@ -50,7 +50,7 @@ Proof.
   destruct log_values; auto.
 Qed.
 
-Hint Rewrite length_log : length.
+#[export] Hint Rewrite length_log : length.
 
 (* TODO: Hint Rewrite length_descriptor breaks a proof here *)
 

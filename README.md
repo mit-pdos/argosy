@@ -20,8 +20,8 @@ example.
 
 ## Compiling
 
-We develop Argosy using Coq master. It should also be compatible with Coq 8.12
-and 8.13, which are tested as part of continuous integration.
+We develop Argosy using Coq master. It should also be compatible with Coq 8.14 and
+8.15, which are tested as part of continuous integration.
 
 This project uses git submodules to include several dependencies. Before
 compiling, run `git submodule update --init --recursive` to set those up.

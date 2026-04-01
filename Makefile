@@ -40,13 +40,22 @@ extract: logging-client/extract/ComposedRefinement.hs
 logging-client/extract/ComposedRefinement.hs: logging-client/Extract.vo
 	./scripts/add-preprocess.sh logging-client/extract/*.hs
 
+Makefile.coq: _RocqProject $(VFILES)
+	@rocq makefile -R src $$(cat libname) $(VFILES) -o Makefile.coq
+
+install: coq Makefile.coq
+	$(MAKE) -f Makefile.coq install
+
+uninstall: Makefile.coq
+	$(MAKE) -f Makefile.coq uninstall
+
 clean:
 	@echo "CLEAN vo glob aux"
 	@rm -f $(ALL_VFILES:.v=.vo) $(ALL_VFILES:.v=.glob)
 	@find $(SRC_DIRS) -name ".*.aux" -exec rm {} \;
 	@echo "CLEAN extraction"
 	@rm -rf logging-client/extract/*.hs
-	rm -f _RocqProject .coqdeps.d
+	rm -f _RocqProject .coqdeps.d Makefile.coq Makefile.coq.conf .filestoinstall
 
-.PHONY: all coq test clean extract
+.PHONY: all coq test clean extract install uninstall
 .DELETE_ON_ERROR:

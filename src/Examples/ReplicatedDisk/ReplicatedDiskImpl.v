@@ -796,7 +796,7 @@ Module ReplicatedDisk.
         simplify; finish.
         destruct r; step.
         lia.
-      * split; [intuition; eauto; try lia|].
+      * split; [intuition auto; eauto; try lia|].
         simplify; finish.
         destruct r.
         ** spec_intros. simpl in H3. destruct H3.

@@ -1,5 +1,5 @@
-Require Import Setoid.
-Require Import Morphisms.
+From Stdlib Require Import Setoid.
+From Stdlib Require Import Morphisms.
 Require Import Proc.
 From Classes Require Import Classes.
 Require Import Helpers.RelationAlgebra.

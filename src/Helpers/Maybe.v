@@ -1,7 +1,7 @@
-Require Import Arith.
-Require Import Bool.
-Require Import List.
-Require Import EquivDec.
+From Stdlib Require Import Arith.
+From Stdlib Require Import Bool.
+From Stdlib Require Import List.
+From Stdlib Require Import EquivDec.
 
 Set Implicit Arguments.
 (** * [maybe_holds] predicate.

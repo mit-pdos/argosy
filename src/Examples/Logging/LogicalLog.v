@@ -158,7 +158,7 @@ Proof.
   intros ps ls a v s Hphy Hlog Hcommit_false pf.
   pose proof (logd_log_bounds Hlog).
   constructor; simpl; eauto.
-  - rewrite app_length; simpl.
+  - rewrite length_app; simpl.
     rewrite (logd_loglen ltac:(eassumption)); auto.
   - intros.
     pose proof (logd_log_contents Hlog (i:=i)).
@@ -223,7 +223,7 @@ Proof.
   intros ps ls s Hphy Hlog Hcommit_false hdr desc log_values Hcommit.
   exists (firstn hdr.(log_length) (zip desc log_values)).
   constructor; eauto.
-  - rewrite firstn_length.
+  - rewrite length_firstn.
     rewrite zip_length1; autorewrite with length; auto.
     rewrite Nat.min_l; auto.
     apply hdr.(log_length_ok).

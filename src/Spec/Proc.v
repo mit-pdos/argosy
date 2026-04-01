@@ -1,5 +1,5 @@
 Require Import Helpers.RelationAlgebra.
-Require Import List.
+From Stdlib Require Import List.
 
 Global Set Implicit Arguments.
 Global Generalizable Variables T R Op State.

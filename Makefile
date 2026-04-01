@@ -4,7 +4,7 @@ TEST_VFILES := $(shell find 'src' -name "*Tests.v")
 PROJ_VFILES := $(shell find 'src' -name "*.v")
 VFILES := $(filter-out $(TEST_VFILES),$(PROJ_VFILES))
 
-COQARGS :=
+COQARGS := -w +deprecated-since-8.8,+deprecated-since-8.17,+deprecated-since-8.20,+deprecated-since-9.0,-deprecated-transitive-library-file-since-9.0
 
 all: coq extract
 coq: $(VFILES:.v=.vo)
@@ -25,7 +25,7 @@ _RocqProject: libname $(wildcard vendor/*)
 
 .coqdeps.d: $(ALL_VFILES) _RocqProject
 	@echo "COQDEP $@"
-	@coqdep -f _RocqProject $(ALL_VFILES) > $@
+	@rocq dep -f _RocqProject $(ALL_VFILES) > $@
 
 ifneq ($(MAKECMDGOALS), clean)
 -include .coqdeps.d
@@ -33,7 +33,7 @@ endif
 
 %.vo: %.v _RocqProject
 	@echo "COQC $<"
-	@coqc $(COQARGS) $(shell cat '_RocqProject') $< -o $@
+	@rocq compile $(COQARGS) $(shell cat '_RocqProject') $< -o $@
 
 extract: logging-client/extract/ComposedRefinement.hs
 

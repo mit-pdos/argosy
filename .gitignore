@@ -23,4 +23,8 @@
 *.glob
 .coqdeps.d
 _RocqProject
+Makefile.coq
+Makefile.coq.conf
+.Makefile.coq.d
+.filestoinstall
 .lia.cache

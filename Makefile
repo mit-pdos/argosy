@@ -10,7 +10,7 @@ all: coq extract
 coq: $(VFILES:.v=.vo)
 test: $(TEST_VFILES:.v=.vo) $(VFILES:.v=.vo)
 
-_CoqProject: libname $(wildcard vendor/*)
+_RocqProject: libname $(wildcard vendor/*)
 	@echo "-R src $$(cat libname)" > $@
 	@for libdir in $(wildcard vendor/*); do \
 	libname=$$(cat $$libdir/libname); \
@@ -20,20 +20,20 @@ _CoqProject: libname $(wildcard vendor/*)
 	fi; \
 	echo "-R $$libdir/src $$(cat $$libdir/libname)" >> $@; \
 	done
-	@echo "_CoqProject:"
+	@echo "_RocqProject:"
 	@cat $@
 
-.coqdeps.d: $(ALL_VFILES) _CoqProject
+.coqdeps.d: $(ALL_VFILES) _RocqProject
 	@echo "COQDEP $@"
-	@coqdep -f _CoqProject $(ALL_VFILES) > $@
+	@coqdep -f _RocqProject $(ALL_VFILES) > $@
 
 ifneq ($(MAKECMDGOALS), clean)
 -include .coqdeps.d
 endif
 
-%.vo: %.v _CoqProject
+%.vo: %.v _RocqProject
 	@echo "COQC $<"
-	@coqc $(COQARGS) $(shell cat '_CoqProject') $< -o $@
+	@coqc $(COQARGS) $(shell cat '_RocqProject') $< -o $@
 
 extract: logging-client/extract/ComposedRefinement.hs
 
@@ -46,7 +46,7 @@ clean:
 	@find $(SRC_DIRS) -name ".*.aux" -exec rm {} \;
 	@echo "CLEAN extraction"
 	@rm -rf logging-client/extract/*.hs
-	rm -f _CoqProject .coqdeps.d
+	rm -f _RocqProject .coqdeps.d
 
 .PHONY: all coq test clean extract
 .DELETE_ON_ERROR:

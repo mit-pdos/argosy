@@ -962,8 +962,9 @@ Module ReplicatedDisk.
                            (refine_spec rd_abstraction (OneDiskAPI.read_spec a) d).
   Proof.
     intros a d.
-    eapply proc_hspec_to_rspec; eauto using Recover_spec_idempotent1;
-      unfold refine_spec, rd_abstraction in *.
+    eapply proc_hspec_to_rspec; unfold refine_spec, rd_abstraction in *.
+    3: apply Recover_spec_idempotent1.
+    - eauto.
     - intros []. eapply Recover_rok1.
     - descend; simplify; intuition eauto.
     - descend; simplify; intuition eauto.
@@ -976,8 +977,9 @@ Module ReplicatedDisk.
                              (refine_spec rd_abstraction (OneDiskAPI.write_spec a b) d).
   Proof.
     intros a b d.
-    eapply proc_hspec_to_rspec; eauto using Recover_spec_idempotent2;
-      unfold refine_spec, rd_abstraction in *.
+    eapply proc_hspec_to_rspec; unfold refine_spec, rd_abstraction in *.
+    3: apply Recover_spec_idempotent2.
+    - eauto.
     - intros. eapply Recover_rok2.
     - descend; simplify; intuition eauto.
     - intros.
@@ -1004,8 +1006,9 @@ Module ReplicatedDisk.
                          (refine_spec rd_abstraction (OneDiskAPI.size_spec) d).
   Proof.
     intros d.
-    eapply proc_hspec_to_rspec; eauto using Recover_spec_idempotent1;
-      unfold refine_spec, rd_abstraction in *.
+    eapply proc_hspec_to_rspec; unfold refine_spec, rd_abstraction in *.
+    3: apply Recover_spec_idempotent1.
+    - eauto.
     - intros. eapply Recover_rok1.
     - descend; simplify; intuition eauto.
     - descend; simplify; intuition eauto.
@@ -1058,9 +1061,11 @@ Module ReplicatedDisk.
       (Recover)
       (Recover_spec d (FullySynced)).
   Proof.
-    eapply proc_hspec_to_rspec; eauto using Recover_spec_idempotent1.
+    eapply proc_hspec_to_rspec.
+    3: apply Recover_spec_idempotent1.
     { eapply Recover_rok1. }
     { intros []. eapply Recover_rok1. }
+    { eauto. }
     { simplify. exists tt. eauto. }
     { simplify. }
   Qed.

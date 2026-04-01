@@ -1,4 +1,4 @@
-Require Import Arith.
+From Stdlib Require Import Arith.
 Require Import Disk.
 
 Set Implicit Arguments.

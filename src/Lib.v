@@ -1,7 +1,7 @@
-From Coq Require Export List.
-From Coq Require Export Lia.
-From Coq Require Export Compare_dec.
-From Coq Require Export Arith.
+From Stdlib Require Export List.
+From Stdlib Require Export Lia.
+From Stdlib Require Export Compare_dec.
+From Stdlib Require Export Arith.
 
 From Classes Require Export Classes.
 Require Export Helpers.RelationAlgebra.

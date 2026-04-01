@@ -22,5 +22,5 @@
 *.v.d
 *.glob
 .coqdeps.d
-_CoqProject
+_RocqProject
 .lia.cache

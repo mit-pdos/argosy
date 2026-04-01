@@ -16,23 +16,23 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image:
-          - "coqorg/coq:dev"
-          - "coqorg/coq:8.20"
+        coq_version:
+          - "dev"
+          - "latest"
       fail-fast: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: true
       - uses: coq-community/docker-coq-action@v1
         with:
-          custom_image: ${{ matrix.image }}
+          coq_version: ${{ matrix.coq_version }}
           before_install:
           install:
           after_install:
           before_script: |
             startGroup "Workaround permission issue"
-              sudo chown -R coq:coq .
+              sudo chown -R 1000:1000 .
             endGroup
           script: |
             startGroup "Build project"

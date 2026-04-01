@@ -1,4 +1,4 @@
-Require Extraction.
+From Stdlib Require Extraction.
 From Classes Require Import Classes.
 From Array Require Export Array.
 

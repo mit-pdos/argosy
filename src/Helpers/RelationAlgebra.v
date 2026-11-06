@@ -24,7 +24,7 @@ Section OutputRelations.
     fun x z o2 => exists o1 y, r1 x y o1 /\ (r2 o1) y z o2.
 
   Notation "p1 ;; p2" := (and_then p1 (fun _ => p2))
-                           (at level 55, p2 at next level, right associativity).
+                           (at level 54, right associativity).
   Notation "x <- p1 ; p2" := (and_then p1 (fun x => p2))
                                (at level 54, right associativity).
 
@@ -728,9 +728,10 @@ Section OutputRelations.
     t.
     - induction H; t.
     - gen x y o.
-      induction H1; t.
+      induction H0; t.
       specialize (IHseq_star _ ltac:(eauto)).
       specialize (IHseq_star _ _ ltac:(eauto)); t.
+      Unshelve. exact tt.
   Qed.
 
   Theorem seq_sliding_precise A T1 (p: relation A A T1) (q: relation A A unit) :
